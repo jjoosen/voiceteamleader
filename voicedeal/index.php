@@ -57,6 +57,45 @@ function vd_json($obj, int $status = 200): void
     exit;
 }
 
+// Welke verplichte instellingen ontbreken nog?
+function vd_missing_config(array $config): array
+{
+    $missing = [];
+    foreach (['TL_CLIENT_ID', 'TL_CLIENT_SECRET', 'ANTHROPIC_API_KEY', 'APP_PASSWORD'] as $k) {
+        if (empty($config[$k]) || $config[$k] === 'VUL_IN') {
+            $missing[] = $k;
+        }
+    }
+    return $missing;
+}
+
+// Bouwt een lijst van zelfdiagnose-checks voor de statuspagina.
+function vd_diagnostics(array $config): array
+{
+    $checks = [];
+    $checks[] = ['PHP-versie', true, PHP_VERSION];
+    $checks[] = ['cURL beschikbaar', function_exists('curl_init'), function_exists('curl_init') ? 'ja' : 'ontbreekt — vraag Combell om de cURL-extensie'];
+
+    $missing = vd_missing_config($config);
+    $checks[] = ['Instellingen (config.php) volledig', empty($missing), empty($missing) ? 'alles ingevuld' : 'nog invullen: ' . implode(', ', $missing)];
+
+    $dataDir = __DIR__ . '/data';
+    $writable = is_dir($dataDir) && is_writable($dataDir);
+    $checks[] = ['Map data/ schrijfbaar', $writable, $writable ? 'ok' : 'geef de map data/ schrijfrechten (755/775)'];
+
+    if (!in_array('ANTHROPIC_API_KEY', $missing, true)) {
+        [$ok, $why] = claude_ping($config);
+        $checks[] = ['Anthropic-key werkt', $ok, $ok ? 'ok' : $why];
+    } else {
+        $checks[] = ['Anthropic-key werkt', false, 'eerst API-key invullen'];
+    }
+
+    $connected = tl_is_connected();
+    $checks[] = ['Verbonden met Teamleader', $connected, $connected ? 'ja' : 'nog op "Verbind met Teamleader" klikken'];
+
+    return $checks;
+}
+
 $action = $_GET['action'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
@@ -82,6 +121,12 @@ if (!vd_is_logged_in()) {
         vd_json(['error' => 'Niet ingelogd.'], 401);
     }
     echo vd_login_page('');
+    exit;
+}
+
+// --- Statuspagina (zelfdiagnose) --------------------------------------------
+if ($action === 'status') {
+    echo vd_status_page(vd_diagnostics($config), vd_base_url());
     exit;
 }
 

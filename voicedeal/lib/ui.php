@@ -203,8 +203,32 @@ function vd_app_page(bool $connected, string $redirectUri): string
   </div>
   <div class="spacer"></div>
   <div id="result"></div>
+  <div class="spacer"></div>
+  <p class="muted"><a href="?action=status">Status / diagnose</a></p>
 </div>
 <script>$script</script>
 HTML;
     return vd_page('VoiceDeal', $body);
+}
+
+function vd_status_page(array $checks, string $baseUrl): string
+{
+    $rows = '';
+    foreach ($checks as [$label, $ok, $detail]) {
+        $icon = $ok ? '&#9989;' : '&#10060;';
+        $rows .= '<tr><td style="padding:.4rem .6rem;font-size:1.1rem">' . $icon . '</td>'
+            . '<td style="padding:.4rem .6rem"><strong>' . htmlspecialchars($label) . '</strong></td>'
+            . '<td style="padding:.4rem .6rem;color:#6b6457">' . htmlspecialchars((string) $detail) . '</td></tr>';
+    }
+    $back = htmlspecialchars($baseUrl);
+    $body = <<<HTML
+<div class="card">
+  <div class="topbar"><h1>Status</h1>
+    <a class="ghost" href="$back" style="text-decoration:none;padding:.55rem .9rem;border-radius:10px;">Terug</a>
+  </div>
+  <p class="sub">Controle of alles klaarstaat om te werken.</p>
+  <table style="width:100%;border-collapse:collapse">$rows</table>
+</div>
+HTML;
+    return vd_page('VoiceDeal — status', $body);
 }

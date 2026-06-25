@@ -3,6 +3,44 @@
 // dealgegevens met de Anthropic API (claude-opus-4-8). We forceren één
 // tool-call zodat we gegarandeerd geldige, gestructureerde output krijgen.
 
+// Lichte test of de Anthropic-key werkt (gebruikt het gratis count_tokens-
+// endpoint). Geeft [true, ''] bij succes of [false, 'reden'] bij een probleem.
+function claude_ping(array $config): array
+{
+    if (empty($config['ANTHROPIC_API_KEY']) || $config['ANTHROPIC_API_KEY'] === 'VUL_IN') {
+        return [false, 'API-key niet ingevuld'];
+    }
+    $ch = curl_init('https://api.anthropic.com/v1/messages/count_tokens');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode([
+            'model'    => 'claude-opus-4-8',
+            'messages' => [['role' => 'user', 'content' => 'ping']],
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'x-api-key: ' . $config['ANTHROPIC_API_KEY'],
+            'anthropic-version: 2023-06-01',
+        ],
+        CURLOPT_TIMEOUT        => 20,
+    ]);
+    $resp   = curl_exec($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $err    = curl_error($ch);
+    curl_close($ch);
+    if ($resp === false) {
+        return [false, 'Netwerkfout: ' . $err];
+    }
+    if ($status === 200) {
+        return [true, ''];
+    }
+    if ($status === 401) {
+        return [false, 'Ongeldige API-key (401)'];
+    }
+    return [false, 'HTTP ' . $status];
+}
+
 function claude_extract(array $config, string $transcript): array
 {
     $tool = [

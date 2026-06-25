@@ -180,6 +180,17 @@ function tl_create_customer(array $config, string $type, string $name): ?string
     return $res['data']['id'] ?? null;
 }
 
+// Haalt de id van de ingelogde Teamleader-gebruiker op (voor 'verantwoordelijke').
+function tl_current_user_id(array $config): ?string
+{
+    try {
+        $me = tl_api($config, 'users.me', []);
+        return $me['data']['id'] ?? null;
+    } catch (Exception $e) {
+        return null;
+    }
+}
+
 // Maakt op basis van de door Claude gestructureerde gegevens een deal aan.
 function tl_create_deal(array $config, array $ex): array
 {
@@ -203,7 +214,21 @@ function tl_create_deal(array $config, array $ex): array
             'currency' => $ex['currency'] ?? 'EUR',
         ];
     }
-    $res = tl_api($config, 'deals.create', $deal);
+
+    // We proberen de deal aan te maken mét verantwoordelijke gebruiker. Lukt dat
+    // niet (sommige accounts weigeren een veld), dan vallen we terug op de
+    // gegarandeerd geldige minimale body.
+    $dealWithOwner = $deal;
+    $ownerId = tl_current_user_id($config);
+    if ($ownerId) {
+        $dealWithOwner['responsible_user_id'] = $ownerId;
+    }
+
+    try {
+        $res = tl_api($config, 'deals.create', $dealWithOwner);
+    } catch (Exception $e) {
+        $res = tl_api($config, 'deals.create', $deal);
+    }
     $dealId = $res['data']['id'] ?? null;
 
     // De ingesproken samenvatting bewaren we als notitie op de deal.
