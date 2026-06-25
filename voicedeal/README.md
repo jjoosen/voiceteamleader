@@ -1,114 +1,91 @@
-# VoiceDeal
+# VoiceDeal (PHP / Combell)
 
-Spreek een deal in je browser in → **Claude** structureert wat je zei →
+Spreek in je browser een deal in → **Claude** structureert wat je zei →
 de deal verschijnt in **Teamleader Focus** (met klant + notitie).
 
-- Draait als **Cloudflare Worker** (geen aparte server nodig).
-- Spraak-naar-tekst gebeurt in de **browser** (Web Speech API — werkt het best in
-  Chrome op desktop/Android). Claude doet de **structurering** van tekst → deal.
+Deze versie draait als **gewone PHP-app** op klassieke webhosting zoals
+**Combell** (PHP + Apache). Geen Node.js, geen Composer, geen installaties —
+je uploadt de bestanden via FTP en vult één configuratiebestand in.
+
+- Spraak-naar-tekst gebeurt in de **browser** (werkt het best in Chrome op
+  desktop/Android). Claude doet de **structurering** tekst → deal.
 - Beveiligd met een zelfgekozen toegangscode (`APP_PASSWORD`).
 
-## Hoe het werkt
+---
 
-```
-Browser (spraak → tekst)  ──►  Worker  ──►  Claude (structureert)  ──►  Teamleader (deal + notitie)
-                                  └── Teamleader-tokens in KV (TOKENS) ──┘
-```
+## Wat je nodig hebt
 
-1. Je tikt op de microfoon en spreekt je deal in (NL).
-2. Het transcript gaat naar de Worker → `/api/process`.
-3. Claude (`claude-opus-4-8`) zet het om naar: klantnaam, type, deal-titel,
-   geschatte waarde en een nette notitie.
-4. De Worker zoekt/maakt de klant in Teamleader, maakt de deal aan en hangt de
-   notitie eraan.
+1. **Combell-hosting** met PHP (een standaard webhostingpakket volstaat) en een
+   domein met **HTTPS**.
+2. **Anthropic API-key** — console.anthropic.com → API Keys (begint met `sk-ant-`).
+3. **Teamleader-integratie** — in de Teamleader Marketplace; geeft je een
+   **Client ID** + **Client Secret**.
 
 ---
 
-## Setup runbook
+## Installatie op Combell (stap voor stap)
 
-> Pak deze map (`voicedeal/`) uit en ga erin staan.
+1. **Configuratie invullen**
+   - Kopieer `config.example.php` naar `config.php`.
+   - Vul in `config.php` je `TL_CLIENT_ID`, `TL_CLIENT_SECRET`,
+     `ANTHROPIC_API_KEY` en een zelfgekozen `APP_PASSWORD` in.
 
-```sh
-cd voicedeal
+2. **Uploaden via FTP**
+   - Upload de hele map (`index.php`, `lib/`, `data/`, `config.php`) naar je
+     webruimte, bijvoorbeeld naar een submap `voicedeal/` in je webroot
+     (bij Combell vaak `httpdocs/` of `www/`).
+   - Zorg dat de map `data/` **schrijfbaar** is (rechten 755 of 775). Daar
+     bewaart de app de Teamleader-tokens (afgeschermd via `data/.htaccess`).
 
-# 1. Wrangler + login (sla over als al gebeurd)
-npm install -g wrangler
-wrangler login
+3. **Redirect-URL registreren in Teamleader**
+   - Je app-URL wordt bijvoorbeeld: `https://jouwdomein.be/voicedeal/`
+   - De redirect-URL is dan: `https://jouwdomein.be/voicedeal/?action=oauth_callback`
+   - Zet die exacte URL als **redirect URI** in je Teamleader-integratie.
+   - (De app toont deze URL ook op het scherm zolang je nog niet verbonden bent.)
 
-# 2. KV-namespace voor de Teamleader-tokens
-wrangler kv namespace create TOKENS
-#  -> kopieer de "id" uit de output naar wrangler.toml bij [[kv_namespaces]]
-
-# 3. Client ID invullen
-#  -> zet je Teamleader client id in wrangler.toml bij [vars] TL_CLIENT_ID
-
-# 4. Secrets zetten (je wordt per stuk om de waarde gevraagd)
-wrangler secret put TL_CLIENT_SECRET      # client secret van de VoiceDeal-integratie
-wrangler secret put ANTHROPIC_API_KEY     # je Anthropic API-key
-wrangler secret put APP_PASSWORD          # zelfgekozen toegangscode voor de app
-
-# 5. Deployen
-wrangler deploy
-#  -> noteer de URL: https://voicedeal.<SUBDOMEIN>.workers.dev
-```
-
-### Teamleader-integratie (redirect-URL)
-
-Maak in de Teamleader Marketplace een integratie aan (of gebruik je bestaande
-"VoiceDeal"-integratie) en zet de **redirect-URL** op:
-
-```
-https://voicedeal.<SUBDOMEIN>.workers.dev/oauth/callback
-```
-
-De app toont deze exacte URL ook in het scherm zolang je nog niet verbonden bent.
-Gebruik de **Client ID** (in `wrangler.toml`) en het **Client Secret**
-(`wrangler secret put TL_CLIENT_SECRET`).
-
-### Eerste gebruik
-
-1. Open de Worker-URL en log in met je `APP_PASSWORD`.
-2. Klik op **"Verbind met Teamleader"** en geef toestemming.
-3. Tik op de microfoon, spreek je deal in, controleer het transcript en klik op
-   **"Verstuur naar Teamleader"**.
+4. **Eerste gebruik**
+   - Open `https://jouwdomein.be/voicedeal/` en log in met je `APP_PASSWORD`.
+   - Klik op **"Verbind met Teamleader"** en geef toestemming.
+   - Tik op de microfoon, spreek je deal in, controleer het transcript en klik
+     op **"Verstuur naar Teamleader"**.
 
 ---
 
-## Lokaal draaien
+## Veiligheid
 
-```sh
-cp .dev.vars.example .dev.vars   # vul je secrets in (zie hieronder)
-wrangler dev
-```
-
-Maak een bestand `.dev.vars` met:
-
-```
-TL_CLIENT_SECRET=...
-ANTHROPIC_API_KEY=...
-APP_PASSWORD=...
-```
-
-(De redirect-URL is dan `http://localhost:8787/oauth/callback`; registreer die
-tijdelijk in je Teamleader-integratie om lokaal te testen.)
-
----
+- `config.php` is een PHP-bestand: de server voert het uit en geeft niets terug,
+  dus je sleutels zijn niet via de browser leesbaar. Het staat in `.gitignore`.
+- De Teamleader-tokens staan in `data/tokens.json`, afgeschermd door
+  `data/.htaccess` (niet bereikbaar via de browser) en in `.gitignore`.
 
 ## Aanpassen aan jouw Teamleader-account
 
-Sommige Teamleader-accounts vragen extra velden bij het aanmaken van een deal
-(bv. `source_id`, `department_id` of `responsible_user_id`). De API-laag staat
-in [`src/teamleader.js`](src/teamleader.js) — pas de body in
-`createDealFromExtraction` aan als `deals.create` een veld vereist. De
-gestructureerde velden die Claude teruggeeft, pas je aan in
-[`src/claude.js`](src/claude.js).
+Sommige accounts vragen extra velden bij `deals.create` (bv. `source_id` of
+`responsible_user_id`). Pas dat aan in `lib/teamleader.php` bij
+`tl_create_deal`. De gestructureerde velden die Claude teruggeeft, pas je aan in
+`lib/claude.php`.
 
 ## Bestanden
 
 | Bestand | Doel |
 | --- | --- |
-| `src/index.js` | Router / Worker-entry |
-| `src/auth.js` | Toegangscode + ondertekende sessiecookie |
-| `src/teamleader.js` | Teamleader OAuth2 + API (deals, klanten, notities) |
-| `src/claude.js` | Anthropic API: transcript → gestructureerde deal |
-| `src/ui.js` | Login- en app-pagina (incl. spraakopname) |
+| `index.php` | Router / startpunt |
+| `config.example.php` | Voorbeeldconfig → kopieer naar `config.php` |
+| `lib/auth.php` | Toegangscode + sessie |
+| `lib/teamleader.php` | Teamleader OAuth2 + API (deals, klanten, notities) |
+| `lib/claude.php` | Anthropic API: transcript → gestructureerde deal |
+| `lib/ui.php` | Login- en app-pagina (incl. spraakopname) |
+| `data/` | Tokenopslag (afgeschermd) |
+
+## Lokaal testen (optioneel)
+
+Met PHP op je eigen computer:
+
+```sh
+cd voicedeal
+cp config.example.php config.php   # vul je gegevens in
+php -S localhost:8000
+```
+
+Open `http://localhost:8000/`. Registreer dan tijdelijk
+`http://localhost:8000/?action=oauth_callback` als redirect-URL in Teamleader.

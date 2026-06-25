@@ -1,5 +1,5 @@
-node_modules/
-.wrangler/
-.dev.vars
+# Geheimen en lokale tokens nooit op GitHub:
+config.php
+data/tokens.json
 *.log
 .DS_Store

@@ -1,5 +1,0 @@
-# Kopieer naar .dev.vars en vul in voor lokaal testen (wrangler dev).
-# .dev.vars staat in .gitignore en wordt niet gecommit.
-TL_CLIENT_SECRET=
-ANTHROPIC_API_KEY=
-APP_PASSWORD=
