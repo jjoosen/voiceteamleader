@@ -1,0 +1,13 @@
+{
+  "name": "voicedeal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spreek een deal in, Claude structureert hem en zet hem in Teamleader.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}
