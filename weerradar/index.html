@@ -565,44 +565,80 @@ function bindTimeline(){
 /* ====================================================================
    BOOT
    ==================================================================== */
+function radarUnavailable(msg){
+  // Map/radar is an enhancement — if it fails we hide its controls and
+  // leave a friendly note, but the forecast keeps working.
+  const ctrl=document.querySelector(".radar-ctrl");
+  if(ctrl) ctrl.style.display="none";
+  const mapEl=$("map");
+  if(mapEl && !mapEl.dataset.note){
+    mapEl.dataset.note="1";
+    mapEl.style.display="flex";
+    mapEl.style.alignItems="center";
+    mapEl.style.justifyContent="center";
+    mapEl.innerHTML=`<div style="color:#9aa6c7;text-align:center;max-width:280px;padding:24px;font-size:.9rem">
+      🛰️ Radarkaart niet beschikbaar<br><span style="font-size:.8rem">${msg||"De kaart kon niet laden, maar de voorspelling hieronder werkt gewoon."}</span></div>`;
+  }
+}
+
 async function boot(){
   $("ovTitle").textContent="Locatie bepalen…";
+  $("ovMsg").textContent="We vragen toegang tot je locatie. Sta je dit niet toe, dan tonen we Antwerpen.";
   $("retryBtn").classList.add("hidden");
   $("spinner").classList.remove("hidden");
 
+  // reset map element + radar controls in case of a previous failed run
+  if(map){ try{ map.remove(); }catch(e){} map=null; }
+  radarLayers=[]; radarFrames=[];
+  const mapEl=$("map");
+  if(mapEl && mapEl.dataset.note){
+    delete mapEl.dataset.note; mapEl.removeAttribute("style"); mapEl.innerHTML="";
+  }
+  const ctrl=document.querySelector(".radar-ctrl"); if(ctrl) ctrl.style.display="";
+
+  // 1) Location never rejects (falls back to Antwerp).
+  const loc = await getLocation();
+  coords = loc;
+  let name = loc.name;
+  if(!name){
+    name = loc.fallback ? ANTWERP.name : await resolveName(loc.lat, loc.lon);
+  }
+  const labelName = name + (loc.fallback ? " (standaard)" : "");
+
+  // 2) Forecast is the CORE feature. Only this can show the error screen.
+  let fc;
   try{
-    const loc = await getLocation();
-    coords = loc;
-
-    let name = loc.name;
-    if(!name){
-      name = loc.fallback ? ANTWERP.name : await resolveName(loc.lat, loc.lon);
-    }
-
-    initMap(loc.lat, loc.lon);
-
-    // load forecast + radar in parallel
-    const [fc] = await Promise.all([
-      loadForecast(loc.lat, loc.lon),
-      loadRadar().catch(e=>{ console.warn("radar:",e); }) // radar is non-fatal
-    ]);
-
-    render(fc, name + (loc.fallback?" (standaard)":""));
-
-    $("overlay").classList.add("hidden");
-
-    // periodic refresh
-    setInterval(async()=>{
-      try{ const f=await loadForecast(loc.lat,loc.lon); render(f,name+(loc.fallback?" (standaard)":"")); }catch(e){}
-    }, 10*60*1000);
-    setInterval(()=> loadRadar().catch(()=>{}), 5*60*1000);
-
+    $("ovTitle").textContent="Weer ophalen…";
+    fc = await loadForecast(loc.lat, loc.lon);
   }catch(err){
-    console.error(err);
+    console.error("forecast:",err);
     $("spinner").classList.add("hidden");
     $("ovTitle").textContent="Er ging iets mis";
-    $("ovMsg").textContent="Kon de weergegevens niet laden. Controleer je internetverbinding en probeer opnieuw.";
+    $("ovMsg").textContent="Kon de weersvoorspelling niet laden. Controleer je internetverbinding en probeer opnieuw.";
     $("retryBtn").classList.remove("hidden");
+    return;
+  }
+
+  render(fc, labelName);
+  $("overlay").classList.add("hidden");
+
+  // 3) Map + animated radar are OPTIONAL enhancements — failures never
+  //    take down the forecast above.
+  try{
+    if(typeof L === "undefined") throw new Error("Leaflet kon niet laden");
+    initMap(loc.lat, loc.lon);
+    await loadRadar();
+  }catch(e){
+    console.warn("radar/map:",e);
+    radarUnavailable();
+  }
+
+  // periodic refresh
+  setInterval(async()=>{
+    try{ const f=await loadForecast(loc.lat,loc.lon); render(f,labelName); }catch(e){}
+  }, 10*60*1000);
+  if(typeof L !== "undefined" && map){
+    setInterval(()=> loadRadar().catch(()=>{}), 5*60*1000);
   }
 }
 
