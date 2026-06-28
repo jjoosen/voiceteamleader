@@ -43,6 +43,23 @@ code { background: #efe9dd; padding: .1rem .35rem; border-radius: 6px; font-size
 .spacer { height: 1rem; }
 .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
 .topbar form { margin: 0; }
+.nav { display:flex; gap:.6rem; }
+.nav a { text-decoration:none; padding:.55rem .9rem; border-radius:10px; font-weight:600; font-size:.9rem; }
+/* Dashboard */
+.board { width:100%; max-width:960px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:.9rem; }
+.stat { background:#fffdf8; border:1px solid #e7e1d4; border-radius:14px; padding:1.1rem 1.2rem; }
+.stat .k { color:#6b6457; font-size:.8rem; text-transform:uppercase; letter-spacing:.03em; margin:0 0 .35rem; }
+.stat .v { font-size:1.7rem; font-weight:700; margin:0; line-height:1.1; }
+.stat .x { color:#6b6457; font-size:.85rem; margin:.3rem 0 0; }
+.stat.warn { border-color:#f0c0a8; background:#fdf3ee; }
+.stat.warn .v { color:#a8512f; }
+.section { margin:1.6rem 0 .6rem; font-size:1.05rem; }
+.ptable { width:100%; border-collapse:collapse; background:#fffdf8; border:1px solid #e7e1d4; border-radius:14px; overflow:hidden; }
+.ptable th, .ptable td { text-align:left; padding:.6rem .9rem; border-bottom:1px solid #eee5d6; font-size:.92rem; }
+.ptable th { color:#6b6457; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; }
+.ptable tr:last-child td { border-bottom:none; }
+.ptable td.num, .ptable th.num { text-align:right; }
 CSS;
 }
 
@@ -186,7 +203,10 @@ function vd_app_page(bool $connected, string $redirectUri): string
 <div class="card">
   <div class="topbar">
     <h1>VoiceDeal</h1>
-    <form method="POST" action="?action=logout"><button class="ghost" type="submit">Uitloggen</button></form>
+    <div class="nav">
+      <a class="ghost" href="?action=dashboard">Dashboard</a>
+      <form method="POST" action="?action=logout"><button class="ghost" type="submit">Uitloggen</button></form>
+    </div>
   </div>
   $banner
   <div class="center">
@@ -231,4 +251,126 @@ function vd_status_page(array $checks, string $baseUrl): string
 </div>
 HTML;
     return vd_page('VoiceDeal — status', $body);
+}
+
+// Formatteert een bedrag in Europese notatie met valuta (€ voor EUR).
+function vd_money($value, string $currency = 'EUR'): string
+{
+    $n = number_format((float) $value, 0, ',', '.');
+    return $currency === 'EUR' ? '€ ' . $n : $n . ' ' . htmlspecialchars($currency);
+}
+
+// Bouwt één KPI-kaartje.
+function vd_stat(string $label, string $value, string $extra = '', bool $warn = false): string
+{
+    $cls = $warn ? 'stat warn' : 'stat';
+    $x   = $extra !== '' ? '<p class="x">' . $extra . '</p>' : '';
+    return "<div class=\"$cls\"><p class=\"k\">" . htmlspecialchars($label) . '</p>'
+        . '<p class="v">' . $value . '</p>' . $x . '</div>';
+}
+
+function vd_dashboard_page(array $d, string $baseUrl): string
+{
+    $back = htmlspecialchars($baseUrl);
+
+    // Nog niet verbonden met Teamleader: toon enkel een uitnodiging.
+    if (empty($d['connected'])) {
+        $body = <<<HTML
+<div class="card board">
+  <div class="topbar"><h1>Dashboard</h1>
+    <div class="nav"><a class="ghost" href="$back">Naar VoiceDeal</a></div>
+  </div>
+  <div class="banner"><strong>Nog niet verbonden met Teamleader.</strong><br/>
+    Verbind eerst je Teamleader-account om je cijfers te zien.
+    <div class="spacer"></div>
+    <a class="primary" href="?action=oauth_start" style="display:inline-block;text-decoration:none;padding:.6rem 1rem;border-radius:10px;">Verbind met Teamleader</a>
+  </div>
+</div>
+HTML;
+        return vd_page('Dashboard — VoiceDeal', $body);
+    }
+
+    $cur = $d['currency'] ?? 'EUR';
+
+    // --- Verkooppijplijn ---
+    $pipeline = '<p class="muted">Geen dealgegevens beschikbaar.</p>';
+    if (!empty($d['deals'])) {
+        $dl = $d['deals'];
+        $cards = vd_stat('Open deals', (string) (int) $dl['open_count'])
+            . vd_stat('Waarde pijplijn', vd_money($dl['open_value'], $cur))
+            . vd_stat('Gewogen waarde', vd_money($dl['weighted'], $cur),
+                'verwachte omzet o.b.v. winstkans');
+
+        $phaseRows = '';
+        foreach ($dl['phases'] as $p) {
+            $phaseRows .= '<tr><td>' . htmlspecialchars($p['name']) . '</td>'
+                . '<td class="num">' . (int) $p['count'] . '</td>'
+                . '<td class="num">' . vd_money($p['value'], $cur) . '</td></tr>';
+        }
+        $phaseTable = $phaseRows === ''
+            ? '<p class="muted">Nog geen open deals.</p>'
+            : '<table class="ptable"><thead><tr><th>Fase</th><th class="num">Aantal</th>'
+              . '<th class="num">Waarde</th></tr></thead><tbody>' . $phaseRows . '</tbody></table>';
+
+        $pipeline = '<div class="grid">' . $cards . '</div>'
+            . '<h3 class="section">Pijplijn per fase</h3>' . $phaseTable;
+    }
+
+    // --- Facturatie ---
+    $invoicing = '<p class="muted">Geen factuurgegevens beschikbaar.</p>';
+    if (!empty($d['invoices'])) {
+        $iv = $d['invoices'];
+        $overdue = (int) $iv['overdue_count'] > 0;
+        $invoicing = '<div class="grid">'
+            . vd_stat('Openstaande facturen', (string) (int) $iv['outstanding_count'],
+                vd_money($iv['outstanding_value'], $cur) . ' te ontvangen')
+            . vd_stat('Vervallen facturen', (string) (int) $iv['overdue_count'],
+                vd_money($iv['overdue_value'], $cur) . ' over vervaldatum', $overdue)
+            . '</div>';
+    }
+
+    // --- Klanten ---
+    $customers = '<p class="muted">Geen klantgegevens beschikbaar.</p>';
+    if (!empty($d['customers'])) {
+        $cu = $d['customers'];
+        $customers = '<div class="grid">'
+            . vd_stat('Bedrijven', $cu['companies'] === null ? '—' : (string) (int) $cu['companies'])
+            . vd_stat('Contactpersonen', $cu['contacts'] === null ? '—' : (string) (int) $cu['contacts'])
+            . '</div>';
+    }
+
+    // --- Opmerkingen / waarschuwingen ---
+    $notes = '';
+    if (!empty($d['notes'])) {
+        $items = '';
+        foreach ($d['notes'] as $n) {
+            $items .= '<li>' . htmlspecialchars($n) . '</li>';
+        }
+        $notes = '<div class="banner"><strong>Opmerkingen:</strong><ul style="margin:.4rem 0 0;padding-left:1.2rem">'
+            . $items . '</ul></div>';
+    }
+
+    $generated = htmlspecialchars($d['generated'] ?? '');
+
+    $body = <<<HTML
+<div class="card board">
+  <div class="topbar"><h1>Dashboard</h1>
+    <div class="nav">
+      <a class="ghost" href="$back">Naar VoiceDeal</a>
+      <form method="POST" action="?action=logout"><button class="ghost" type="submit">Uitloggen</button></form>
+    </div>
+  </div>
+  <p class="sub">Je kerncijfers uit Teamleader Focus — bijgewerkt op $generated.</p>
+  $notes
+  <h2 class="section">Verkooppijplijn</h2>
+  $pipeline
+  <h2 class="section">Facturatie</h2>
+  $invoicing
+  <h2 class="section">Klanten</h2>
+  $customers
+  <div class="spacer"></div>
+  <p class="muted"><a href="?action=dashboard">Vernieuwen</a> &middot; <a href="?action=status">Status / diagnose</a></p>
+</div>
+HTML;
+    return vd_page('Dashboard — VoiceDeal', $body);
 }

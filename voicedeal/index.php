@@ -6,6 +6,7 @@ declare(strict_types=1);
 require __DIR__ . '/lib/auth.php';
 require __DIR__ . '/lib/teamleader.php';
 require __DIR__ . '/lib/claude.php';
+require __DIR__ . '/lib/dashboard.php';
 require __DIR__ . '/lib/ui.php';
 
 // --- Configuratie laden ------------------------------------------------------
@@ -127,6 +128,24 @@ if (!vd_is_logged_in()) {
 // --- Statuspagina (zelfdiagnose) --------------------------------------------
 if ($action === 'status') {
     echo vd_status_page(vd_diagnostics($config), vd_base_url());
+    exit;
+}
+
+// --- Dashboard (kmo-cijfers uit Teamleader) ---------------------------------
+if ($action === 'dashboard') {
+    if (!tl_is_connected()) {
+        echo vd_dashboard_page(['connected' => false], vd_base_url());
+        exit;
+    }
+    try {
+        $data = dash_collect($config);
+    } catch (Exception $e) {
+        $msg = $e->getMessage() === 'NOT_CONNECTED'
+            ? 'Teamleader-verbinding verlopen. Verbind opnieuw.'
+            : $e->getMessage();
+        $data = ['connected' => true, 'notes' => ['Dashboard kon niet laden: ' . $msg]];
+    }
+    echo vd_dashboard_page($data, vd_base_url());
     exit;
 }
 

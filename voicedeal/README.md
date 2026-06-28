@@ -3,6 +3,12 @@
 Spreek in je browser een deal in → **Claude** structureert wat je zei →
 de deal verschijnt in **Teamleader Focus** (met klant + notitie).
 
+Daarnaast is er een **dashboard voor kmo's**: één overzichtsscherm met je
+kerncijfers live uit Teamleader (verkooppijplijn, openstaande facturen en
+klanten). Je bereikt het via de knop **Dashboard** of via
+`?action=dashboard`. Het gebruikt dezelfde login en Teamleader-koppeling als
+VoiceDeal — geen extra installatie nodig.
+
 Deze versie draait als **gewone PHP-app** op klassieke webhosting zoals
 **Combell** (PHP + Apache). Geen Node.js, geen Composer, geen installaties —
 je uploadt de bestanden via FTP en vult één configuratiebestand in.
@@ -74,7 +80,8 @@ Sommige accounts vragen extra velden bij `deals.create` (bv. `source_id` of
 | `lib/auth.php` | Toegangscode + sessie |
 | `lib/teamleader.php` | Teamleader OAuth2 + API (deals, klanten, notities) |
 | `lib/claude.php` | Anthropic API: transcript → gestructureerde deal |
-| `lib/ui.php` | Login- en app-pagina (incl. spraakopname) |
+| `lib/dashboard.php` | Bundelt kmo-kerncijfers uit Teamleader (pijplijn, facturatie, klanten) |
+| `lib/ui.php` | Login-, app- en dashboardpagina (incl. spraakopname) |
 | `data/` | Tokenopslag (afgeschermd) |
 
 ## Lokaal testen (optioneel)
