@@ -1,0 +1,7 @@
+# Scherm de datamap volledig af voor de browser: hier staan de OAuth-tokens.
+Require all denied
+# Oudere Apache (2.2):
+<IfModule !mod_authz_core.c>
+  Order deny,allow
+  Deny from all
+</IfModule>

@@ -1,0 +1,4 @@
+# Geheimen en runtime-bestanden nooit op GitHub:
+config.php
+data/tokens.json
+data/*.json
