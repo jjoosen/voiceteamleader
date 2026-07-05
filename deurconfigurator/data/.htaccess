@@ -1,4 +1,4 @@
-# Scherm opgeslagen offerte-aanvragen af van de browser
+# Scherm opgeslagen offerte-aanvragen en bestellingen af van de browser
 <IfModule mod_authz_core.c>
   Require all denied
 </IfModule>

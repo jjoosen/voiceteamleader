@@ -272,9 +272,137 @@ h3 { font-size: 16px; margin: 0 0 10px; }
   #sum-detail { display: none; }
 }
 
+/* ===== hoofdnavigatie ===== */
+.mainnav-bar { background: #fff; border-bottom: 1px solid var(--line); }
+.mainnav { max-width: 1080px; margin: 0 auto; display: flex; gap: 6px; padding: 8px 20px; }
+.nav-item {
+  position: relative; font: inherit; font-weight: 600; font-size: 14px; border: none; background: transparent;
+  color: var(--muted); padding: 9px 14px; border-radius: 9px; cursor: pointer; display: flex; align-items: center; gap: 7px;
+}
+.nav-item:hover { background: var(--bg); color: var(--ink); }
+.nav-item.on { background: var(--sel-bg); color: var(--teal-d); }
+.nav-item .ni-ic { font-size: 16px; }
+.nav-item.cart-btn { margin-left: auto; }
+.cart-badge { background: var(--lime); color: #fff; font-size: 11px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 999px; display: grid; place-items: center; padding: 0 5px; }
+
+/* ===== resultaat-CTA ===== */
+.result-cta { display: flex; gap: 12px; flex-wrap: wrap; margin: 22px 0 6px; align-items: center; }
+.result-cta .primary.lg { font-size: 16px; }
+.quote-fold { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+.quote-fold summary { cursor: pointer; font-weight: 600; color: var(--teal); }
+.quote-fold .quote-box { margin-top: 14px; }
+
+/* ===== winkelmandje ===== */
+.empty-state { text-align: center; padding: 40px 20px; }
+.empty-state .es-ic { font-size: 48px; }
+.empty-state p { color: var(--muted); margin: 10px 0 18px; }
+.cart-list { display: flex; flex-direction: column; gap: 12px; }
+.cart-item { display: grid; grid-template-columns: 74px 1fr auto; gap: 14px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.ci-thumb { width: 74px; }
+.ci-thumb svg { width: 74px; height: 110px; border-radius: 6px; }
+.ci-title { font-weight: 700; }
+.ci-sub { color: var(--muted); font-size: 12.5px; margin: 2px 0 6px; }
+.ci-actions { display: flex; gap: 14px; }
+.link-btn { border: none; background: none; font: inherit; font-size: 13px; color: var(--teal); cursor: pointer; padding: 0; }
+.link-btn.danger { color: #b23b2e; }
+.ci-right { text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.ci-qty { display: flex; align-items: center; gap: 8px; }
+.rnd.sm { width: 28px; height: 28px; font-size: 15px; }
+.ci-price { font-weight: 800; color: var(--teal-d); }
+.cart-summary { margin-top: 18px; background: var(--bg); border-radius: 12px; padding: 16px 18px; }
+.cs-line { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+.cs-line.total { border-top: 2px solid var(--teal); margin-top: 6px; padding-top: 10px; font-size: 20px; font-weight: 800; color: var(--teal-d); }
+.cs-note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+.cart-cta { display: flex; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+
+/* ===== checkout ===== */
+.checkout-grid { display: grid; grid-template-columns: 1fr 340px; gap: 22px; align-items: start; }
+.co-form h3 { margin-top: 18px; }
+.co-form textarea { width: 100%; font: inherit; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 9px; margin: 12px 0; }
+.co-summary { background: var(--bg); border-radius: 14px; padding: 18px; position: sticky; top: 14px; }
+.co-items { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.co-item { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.coi-thumb svg { width: 40px; height: 60px; border-radius: 4px; }
+.coi-price { font-weight: 700; }
+
+/* ===== bestelbevestiging ===== */
+.order-done { text-align: center; padding: 20px; }
+.od-check { width: 64px; height: 64px; border-radius: 50%; background: var(--lime); color: #fff; font-size: 34px; display: grid; place-items: center; margin: 0 auto 14px; }
+.od-nr { font-size: 26px; font-weight: 800; color: var(--teal-d); letter-spacing: 1px; margin: 6px 0 14px; }
+.od-total { font-size: 18px; font-weight: 700; margin: 14px 0; }
+.order-done .btn-row { justify-content: center; }
+
+/* ===== keuzehulp ===== */
+.panel.guide { padding: 0; overflow: hidden; }
+.guide-hero { background: linear-gradient(120deg, var(--teal-d), var(--teal)); color: #fff; padding: 30px 28px; }
+.guide-hero h2 { color: #fff; }
+.guide-hero .lead { color: rgba(255,255,255,.9); max-width: 640px; }
+.guide-hero .btn { margin-top: 8px; }
+.guide-sec { padding: 24px 28px; border-bottom: 1px solid var(--line); }
+.guide-sec h3 { font-size: 19px; }
+.gs-intro { color: var(--muted); max-width: 720px; }
+.gs-tip { background: #f0f7ee; border-left: 3px solid var(--lime); padding: 10px 14px; border-radius: 8px; font-size: 13.5px; margin-top: 14px; }
+.core-compare { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+.core-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.core-cross svg { width: 100%; height: auto; border-radius: 6px; }
+.core-card h4 { margin: 10px 0 4px; font-size: 15px; }
+.core-card p { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.sound-meter { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.sm-lbl { font-size: 11px; color: var(--muted); width: 42px; }
+.sm-bar { flex: 1; height: 7px; background: #eceae4; border-radius: 4px; overflow: hidden; }
+.sm-bar i { display: block; height: 100%; background: var(--lime); }
+.core-card ul { margin: 0; padding: 0; list-style: none; font-size: 12.5px; }
+.core-card .pros li { color: var(--teal-d); }
+.core-card .cons li { color: #a06; opacity: .8; }
+.db-scale { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.db-row { display: grid; grid-template-columns: 200px 1fr 200px; gap: 12px; align-items: center; }
+.db-place { font-weight: 600; font-size: 13.5px; }
+.db-track { background: #eceae4; border-radius: 5px; height: 22px; overflow: hidden; }
+.db-track i { display: flex; align-items: center; justify-content: flex-end; height: 100%; color: #fff; font-size: 11px; font-weight: 700; padding-right: 8px; border-radius: 5px; }
+.db-rec { font-size: 12.5px; color: var(--muted); }
+.measure-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.measure-step { position: relative; border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.ms-num { position: absolute; top: -10px; left: 14px; width: 24px; height: 24px; border-radius: 50%; background: var(--teal); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 13px; }
+.ms-ic { font-size: 26px; }
+.measure-step strong { display: block; margin: 6px 0 4px; }
+.measure-step p { font-size: 13px; color: var(--muted); margin: 0; }
+.measure-tool { margin-top: 16px; background: var(--bg); border-radius: 12px; padding: 18px; }
+.measure-tool h4 { margin: 0 0 10px; }
+.mt-inner input[type=range] { width: 100%; accent-color: var(--teal); margin: 8px 0; }
+.mt-lbl { font-size: 13px; font-weight: 600; }
+.mt-result { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+.mt-result strong { font-size: 24px; color: var(--teal-d); }
+.mt-note { font-size: 12px; color: var(--muted); margin: 8px 0 0; }
+.swing-demo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; max-width: 520px; }
+.swing-card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; text-align: center; }
+.sw-svg svg { width: 120px; height: 90px; }
+.swing-card strong { display: block; }
+.swing-card small { color: var(--muted); }
+.faq { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; margin-bottom: 8px; }
+.faq summary { cursor: pointer; font-weight: 600; }
+.faq p { color: var(--muted); font-size: 14px; margin: 8px 0 0; }
+.guide-cta { padding: 26px 28px; text-align: center; background: var(--bg); }
+
+/* ===== toast ===== */
+#toast {
+  position: fixed; left: 50%; bottom: 84px; transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: #fff; padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); opacity: 0; pointer-events: none; transition: .25s; z-index: 60;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+@media (max-width: 820px) {
+  .core-compare, .measure-grid { grid-template-columns: 1fr; }
+  .checkout-grid { grid-template-columns: 1fr; }
+  .co-summary { position: static; }
+  .db-row { grid-template-columns: 1fr; gap: 4px; }
+  .cart-item { grid-template-columns: 60px 1fr; }
+  .ci-right { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; }
+}
+
 /* print */
 @media print {
-  .site-header, #stepper, #summary-bar, .quote-actions, .btn-row, .quote-box .chk { display: none !important; }
+  .site-header, .mainnav-bar, #stepper, #summary-bar, .quote-actions, .btn-row, .quote-box .chk, #toast { display: none !important; }
   .panel { box-shadow: none; border: none; }
   body { background: #fff; }
 }
@@ -298,18 +426,13 @@ h3 { font-size: 16px; margin: 0 0 10px; }
   </div>
 </header>
 
+<div class="mainnav-bar"><nav id="mainnav" class="mainnav" aria-label="Hoofdnavigatie"></nav></div>
 <nav id="stepper" aria-label="Stappen"></nav>
 <main id="app" aria-live="polite"></main>
 <div id="summary-bar" aria-hidden="true">
   <div class="inner">
-    <div>
-      <div id="sum-line"></div>
-      <div id="sum-detail"></div>
-    </div>
-    <div class="price">
-      <span id="sum-price"></span>
-      <small id="sum-vat">richtprijs incl. btw</small>
-    </div>
+    <div><div id="sum-line"></div><div id="sum-detail"></div></div>
+    <div class="price"><span id="sum-price"></span><small id="sum-vat">richtprijs incl. btw</small></div>
   </div>
 </div>
 
@@ -778,6 +901,7 @@ window.CATALOG = {
 
   /* ---- state ------------------------------------------------------------ */
   var state = {
+    view: "config",    // config | guide | cart | checkout | done
     step: 0,
     audience: "gezin", // gezin (particulier) | aannemer (vakman)
     advice: {},        // antwoorden adviesmotor
@@ -797,6 +921,11 @@ window.CATALOG = {
     handleId: null,
     extras: {},        // id -> qty
     qty: 1,
+    _seq: 1,
+    cart: [],          // winkelmandje: [{uid,label,cfg,unitIncl,qty,thumb}]
+    editingUid: null,  // bewerken van bestaand mandje-item
+    checkout: {},      // klant + levering
+    order: null,       // geplaatste bestelling
   };
 
   /* ====================================================================== *
@@ -997,24 +1126,84 @@ window.CATALOG = {
   var app = $("#app");
 
   function render() {
-    var steps = [renderIntro, renderAdvice, renderLine, renderFinish, renderModel,
-                 renderSize, renderHardware, renderExtras, renderResult];
     app.innerHTML = "";
-    var content = steps[state.step]();
-    // stappen met live preview naast de configuratie (afwerking t/m extra's)
-    var withPreview = state.step >= 3 && state.step <= 7 && state.lineId;
-    if (withPreview) {
-      app.appendChild(h("div", { class: "config-layout" }, [
-        h("aside", { class: "preview-aside" }, [renderPreviewPanel()]),
-        h("div", { class: "config-main" }, [content]),
-      ]));
+    var stepperEl = $("#stepper");
+
+    if (state.view === "guide") {
+      app.appendChild(renderGuide());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "cart") {
+      app.appendChild(renderCart());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "checkout") {
+      app.appendChild(renderCheckout());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "done") {
+      app.appendChild(renderOrderDone());
+      if (stepperEl) stepperEl.style.display = "none";
     } else {
-      app.appendChild(content);
+      // configurator-wizard
+      if (stepperEl) stepperEl.style.display = "";
+      var steps = [renderIntro, renderAdvice, renderLine, renderFinish, renderModel,
+                   renderSize, renderHardware, renderExtras, renderResult];
+      var content = steps[state.step]();
+      var withPreview = state.step >= 3 && state.step <= 7 && state.lineId;
+      if (withPreview) {
+        app.appendChild(h("div", { class: "config-layout" }, [
+          h("aside", { class: "preview-aside" }, [renderPreviewPanel()]),
+          h("div", { class: "config-main" }, [content]),
+        ]));
+      } else {
+        app.appendChild(content);
+      }
+      renderStepper();
     }
-    renderStepper();
+
+    renderNav();
     renderModeSwitch();
     updateSummary();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // hoofdnavigatie (Configureren / Keuzehulp / Winkelmandje) onder de header
+  function renderNav() {
+    var el = $("#mainnav");
+    if (!el) return;
+    var count = state.cart.reduce(function (n, it) { return n + it.qty; }, 0);
+    el.innerHTML = "";
+    var items = [
+      { id: "config", label: "Configureren", ic: "🚪" },
+      { id: "guide", label: "Keuzehulp", ic: "💡" },
+    ];
+    items.forEach(function (it) {
+      el.appendChild(h("button", {
+        class: "nav-item" + (state.view === it.id ? " on" : ""),
+        onclick: function () { goView(it.id); },
+      }, [h("span", { class: "ni-ic" }, [it.ic]), it.label]));
+    });
+    el.appendChild(h("button", {
+      class: "nav-item cart-btn" + (state.view === "cart" ? " on" : ""),
+      onclick: function () { goView("cart"); },
+    }, [
+      h("span", { class: "ni-ic" }, ["🛒"]), "Winkelmandje",
+      count ? h("span", { class: "cart-badge" }, [String(count)]) : null,
+    ]));
+  }
+
+  function goView(v) {
+    state.view = v;
+    if (v === "config" && !state.lineId && state.step > 2) state.step = 0;
+    render();
+  }
+
+  // korte toast-melding
+  function toast(msg) {
+    var t = $("#toast");
+    if (!t) { t = h("div", { id: "toast" }, []); document.body.appendChild(t); }
+    t.textContent = msg;
+    t.className = "show";
+    clearTimeout(t._t);
+    t._t = setTimeout(function () { t.className = ""; }, 2200);
   }
 
   // modus-schakelaar (gezin / aannemer) in de header
@@ -1557,27 +1746,94 @@ window.CATALOG = {
 
     kids.push(h("p", { class: "disclaimer" }, [C.meta.priceNote]));
 
-    // offerteformulier
-    kids.push(h("div", { class: "quote-box", id: "quote" }, [
-      h("h3", {}, ["Vraag je vrijblijvende offerte aan"]),
-      h("div", { class: "form-grid" }, [
-        field("naam", "Naam", "text", true),
-        field("email", "E-mail", "email", true),
-        field("tel", "Telefoon", "tel", false),
-        field("postcode", "Postcode", "text", false),
+    // hoofd-actie: in winkelmandje / bestellen
+    kids.push(h("div", { class: "result-cta" }, [
+      h("button", { class: "btn primary lg", onclick: function () { addToCart(); } }, [
+        (state.editingUid ? "✓ Wijziging opslaan" : "🛒 In winkelmandje") + " · " + euro(calcTotal(line)),
       ]),
-      h("textarea", { id: "f-bericht", placeholder: "Extra info of vraag (optioneel)", rows: "3" }, []),
-      h("label", { class: "chk" }, [h("input", { type: "checkbox", id: "f-akkoord" }), h("span", {}, [" Ik ga akkoord dat mijn gegevens gebruikt worden om deze aanvraag te behandelen."])]),
-      h("div", { class: "quote-actions" }, [
-        h("button", { class: "btn primary lg", onclick: submitQuote }, ["Verstuur offerte-aanvraag"]),
-        h("button", { class: "btn ghost", onclick: function () { window.print(); } }, ["🖨 Print / bewaar als PDF"]),
-        h("button", { class: "btn ghost", onclick: function () { state.step = 0; render(); } }, ["↻ Opnieuw beginnen"]),
+      h("button", { class: "btn ghost lg", onclick: function () { addToCart(true); } }, ["In mandje en meteen bestellen →"]),
+      h("button", { class: "btn ghost", onclick: function () { window.print(); } }, ["🖨 Print / PDF"]),
+    ]));
+
+    // offerte (alternatief voor wie liever advies vraagt)
+    kids.push(h("details", { class: "quote-fold" }, [
+      h("summary", {}, ["Liever eerst een vrijblijvende offerte of advies?"]),
+      h("div", { class: "quote-box", id: "quote" }, [
+        h("div", { class: "form-grid" }, [
+          field("naam", "Naam", "text", true),
+          field("email", "E-mail", "email", true),
+          field("tel", "Telefoon", "tel", false),
+          field("postcode", "Postcode", "text", false),
+        ]),
+        h("textarea", { id: "f-bericht", placeholder: "Extra info of vraag (optioneel)", rows: "3" }, []),
+        h("label", { class: "chk" }, [h("input", { type: "checkbox", id: "f-akkoord" }), h("span", {}, [" Ik ga akkoord dat mijn gegevens gebruikt worden om deze aanvraag te behandelen."])]),
+        h("div", { class: "quote-actions" }, [
+          h("button", { class: "btn primary", onclick: submitQuote }, ["Verstuur offerte-aanvraag"]),
+        ]),
+        h("div", { id: "quote-msg", class: "quote-msg" }, []),
       ]),
-      h("div", { id: "quote-msg", class: "quote-msg" }, []),
     ]));
 
     return card("", kids);
   }
+
+  /* ---- winkelmandje-acties --------------------------------------------- */
+  function currentItemLabel(line, fg) {
+    return line.name + " · " + (fg ? fg.finish.name : "") + " · " + C.models[state.modelId].name +
+      " · " + (line.customHeight ? state.customHeight : state.height) + "×" + state.width + " cm";
+  }
+  function snapshotConfig() {
+    return {
+      lineId: state.lineId, finishId: state.finishId, coreId: state.coreId, modelId: state.modelId,
+      height: state.height, customHeight: state.customHeight, width: state.width, swing: state.swing,
+      hinge: state.hinge, frameOptId: state.frameOptId, lockId: state.lockId, lockColor: state.lockColor,
+      glassId: state.glassId, handleId: state.handleId, extras: JSON.parse(JSON.stringify(state.extras)),
+    };
+  }
+  function uid() { return "d" + (state.cart.length + 1) + "-" + state._seq++; }
+  function addToCart(goCheckout) {
+    var line = lineById(state.lineId);
+    var fg = finishById(state.finishId);
+    var item = {
+      uid: state.editingUid || uid(),
+      label: currentItemLabel(line, fg),
+      lineName: line.name,
+      finishName: fg ? fg.finish.name : "",
+      cfg: snapshotConfig(),
+      unitIncl: calcUnit(line),
+      extrasIncl: calcExtras(),
+      qty: state.qty,
+      thumb: bigDoorSVG(line, fg, true),
+    };
+    if (state.editingUid) {
+      var i = state.cart.map(function (x) { return x.uid; }).indexOf(state.editingUid);
+      if (i >= 0) state.cart[i] = item;
+      state.editingUid = null;
+      toast("Wijziging opgeslagen");
+    } else {
+      state.cart.push(item);
+      toast("Toegevoegd aan winkelmandje");
+    }
+    state.view = goCheckout ? "checkout" : "cart";
+    render();
+  }
+  function loadCartItem(uidv) {
+    var it = state.cart.filter(function (x) { return x.uid === uidv; })[0];
+    if (!it) return;
+    var c = it.cfg;
+    Object.keys(c).forEach(function (k) { state[k] = k === "extras" ? JSON.parse(JSON.stringify(c[k])) : c[k]; });
+    state.qty = it.qty;
+    state.editingUid = uidv;
+    state.view = "config";
+    state.step = 8;
+    render();
+  }
+  function removeCartItem(uidv) {
+    state.cart = state.cart.filter(function (x) { return x.uid !== uidv; });
+    render();
+  }
+  function cartItemTotal(it) { return it.unitIncl * it.qty + (it.extrasIncl || 0); }
+  function cartTotal() { return state.cart.reduce(function (s, it) { return s + cartItemTotal(it); }, 0); }
 
   function field(id, label, type, req) {
     return h("div", { class: "field" }, [
@@ -1588,55 +1844,118 @@ window.CATALOG = {
   function specRow(k, v) { return h("div", { class: "spec-row" }, [h("span", { class: "k" }, [k]), h("span", { class: "v" }, [v])]); }
   function priceLine(k, v) { return h("div", { class: "pl" }, [h("span", {}, [k]), h("span", {}, [euro(v)])]); }
 
-  // grote deur-preview
+  // grote deur-preview in een showroom-scène
   function bigDoor(line, fg) {
+    return h("div", { class: "door-shell", html: bigDoorSVG(line, fg, false) });
+  }
+
+  // genereert de volledige SVG (thumb=true → compacte versie voor mandje)
+  function bigDoorSVG(line, fg, thumb) {
     var m = C.models[state.modelId];
-    var color = fg ? fg.finish.swatch : "#eee";
-    var frameCol = "#d8d3c8";
+    var sw = fg ? fg.finish.swatch : "#eee";
+    var isGrad = sw.indexOf("gradient") >= 0;
+    var cols2 = (sw.match(/#[0-9a-fA-F]{3,6}/g) || ["#ddd", "#ccc"]);
+    var base = isGrad ? cols2[0] : sw;
+    var base2 = isGrad ? (cols2[1] || cols2[0]) : shade(sw, -8);
+    var isDark = luma(base) < 90;
+
+    var frameCol = "#e7e3da";
     if (line.frame.options && state.frameOptId) {
       var fo = state.frameOptId;
-      frameCol = fo === "black-mat" ? "#1c1c1e" : fo.indexOf("oak") >= 0 ? "#c49a5f" : "#e7e3da";
+      frameCol = fo === "black-mat" ? "#1c1c1e" : fo.indexOf("oak") >= 0 ? "#c49a5f" : "#eceae4";
     }
-    var handleLeft = state.hinge === "links"; // kruk aan tegenovergestelde zijde
-    var svg = '<svg viewBox="0 0 200 400" class="big-svg" preserveAspectRatio="xMidYMid meet">';
-    svg += '<rect x="6" y="4" width="188" height="392" rx="3" fill="' + frameCol + '"/>';
-    svg += '<rect x="16" y="12" width="168" height="376" rx="2" fill="' + (fg && fg.finish.swatch.indexOf("gradient") >= 0 ? "#ccc" : color) + '"/>';
-    // gradient fill via foreignless: use pattern fallback → fill rect with css handled outside; here approximate
-    if (fg && fg.finish.swatch.indexOf("gradient") >= 0) {
-      svg += '<rect x="16" y="12" width="168" height="376" rx="2" fill="url(#wood)"/>';
-      svg += '<defs><linearGradient id="wood" x1="0" y1="0" x2="1" y2="0">' + gradStops(fg.finish.swatch) + '</linearGradient></defs>';
+    var handleLeft = state.hinge === "links";
+    var uidp = "g" + Math.abs(hashStr((state.finishId || "") + state.modelId + (state.frameOptId || "")));
+
+    // room scene: 200x400 viewport
+    var s = '<svg viewBox="0 0 200 400" class="big-svg" preserveAspectRatio="xMidYMid meet">';
+    s += '<defs>';
+    // muur-gradient
+    s += '<linearGradient id="wall' + uidp + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efece6"/><stop offset="1" stop-color="#e2ded6"/></linearGradient>';
+    // vloer-gradient
+    s += '<linearGradient id="floor' + uidp + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8cbb8"/><stop offset="1" stop-color="#c9b9a2"/></linearGradient>';
+    // deur-materiaal
+    s += '<linearGradient id="door' + uidp + '" x1="0" y1="0" x2="1" y2="0.15"><stop offset="0" stop-color="' + shade(base, 6) + '"/><stop offset="0.5" stop-color="' + base + '"/><stop offset="1" stop-color="' + base2 + '"/></linearGradient>';
+    // houtnerf-textuur
+    if (isGrad) {
+      s += '<filter id="wood' + uidp + '"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.11" numOctaves="3" seed="7" result="n"/>' +
+           '<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0"/>' +
+           '<feComposite operator="over" in2="SourceGraphic"/></filter>';
     }
+    // glas-gradient
+    s += '<linearGradient id="glass' + uidp + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dfeaee"/><stop offset="0.5" stop-color="#c4d6db"/><stop offset="1" stop-color="#eef4f5"/></linearGradient>';
+    s += '</defs>';
+
+    // achtergrond muur + vloer + plint
+    s += '<rect x="0" y="0" width="200" height="330" fill="url(#wall' + uidp + ')"/>';
+    s += '<rect x="0" y="330" width="200" height="70" fill="url(#floor' + uidp + ')"/>';
+    s += '<rect x="0" y="326" width="200" height="8" fill="#f4f1ea"/>'; // plint
+    // zachte schaduw deur op vloer
+    s += '<ellipse cx="104" cy="334" rx="92" ry="7" fill="rgba(0,0,0,0.14)"/>';
+
+    // kader / deurkast
+    var invisible = line.invisible;
+    if (!invisible) {
+      s += '<rect x="8" y="8" width="184" height="322" rx="2" fill="' + frameCol + '"/>';
+      s += '<rect x="8" y="8" width="184" height="322" rx="2" fill="none" stroke="rgba(0,0,0,.08)"/>';
+    } else {
+      // verdoken: dunne schaduwlijn rondom
+      s += '<rect x="14" y="10" width="172" height="320" rx="1" fill="rgba(0,0,0,.05)"/>';
+    }
+
+    // deurblad
+    var dx = invisible ? 16 : 18, dy = invisible ? 12 : 14, dw = invisible ? 168 : 164, dh = invisible ? 316 : 312;
+    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#door' + uidp + ')"/>';
+    if (isGrad) s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" filter="url(#wood' + uidp + ')" fill="' + base + '"/>';
+    // subtiele lichtval links
+    s += '<rect x="' + dx + '" y="' + dy + '" width="14" height="' + dh + '" fill="rgba(255,255,255,.08)"/>';
+    s += '<rect x="' + (dx + dw - 10) + '" y="' + dy + '" width="10" height="' + dh + '" fill="rgba(0,0,0,.06)"/>';
+
+    // model-detail
+    var cx = dx, cy = dy, cw = dw, ch = dh;
     if (m.glass && m.grid) {
-      var cols = m.grid[0], rows = m.grid[1];
-      var x0 = 26, y0 = 22, gw2 = 148 / cols, gh2 = 356 / rows;
-      svg += '<rect x="' + x0 + '" y="' + y0 + '" width="148" height="356" fill="#cfe0e6" opacity="0.8" stroke="#222" stroke-width="4"/>';
-      for (var c = 1; c < cols; c++) svg += '<line x1="' + (x0 + c * gw2) + '" y1="' + y0 + '" x2="' + (x0 + c * gw2) + '" y2="' + (y0 + 356) + '" stroke="#222" stroke-width="4"/>';
-      for (var r = 1; r < rows; r++) svg += '<line x1="' + x0 + '" y1="' + (y0 + r * gh2) + '" x2="' + (x0 + 148) + '" y2="' + (y0 + r * gh2) + '" stroke="#222" stroke-width="4"/>';
+      var gcols = m.grid[0], grows = m.grid[1];
+      var gx = cx + 8, gy = cy + 8, gw2 = (cw - 16) / gcols, gh2 = (ch - 16) / grows;
+      s += '<rect x="' + gx + '" y="' + gy + '" width="' + (cw - 16) + '" height="' + (ch - 16) + '" fill="url(#glass' + uidp + ')" stroke="' + (isDark ? "#111" : "#2a2a2a") + '" stroke-width="4"/>';
+      // reflectie-strepen
+      s += '<line x1="' + (gx + 6) + '" y1="' + (gy + 12) + '" x2="' + (gx + 30) + '" y2="' + (gy + 40) + '" stroke="rgba(255,255,255,.5)" stroke-width="3"/>';
+      for (var c = 1; c < gcols; c++) s += '<line x1="' + (gx + c * gw2) + '" y1="' + gy + '" x2="' + (gx + c * gw2) + '" y2="' + (gy + ch - 16) + '" stroke="' + (isDark ? "#111" : "#2a2a2a") + '" stroke-width="4"/>';
+      for (var r = 1; r < grows; r++) s += '<line x1="' + gx + '" y1="' + (gy + r * gh2) + '" x2="' + (gx + cw - 16) + '" y2="' + (gy + r * gh2) + '" stroke="' + (isDark ? "#111" : "#2a2a2a") + '" stroke-width="4"/>';
     } else if (m.lines) {
+      var lc = isDark ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.16)";
       for (var i = 0; i < m.lines; i++) {
         if (m.orient === "h") {
-          var yy = 70 + i * (260 / Math.max(1, m.lines));
-          svg += '<line x1="30" y1="' + yy + '" x2="170" y2="' + yy + '" stroke="rgba(0,0,0,.18)" stroke-width="2"/>';
+          var yy = cy + 50 + i * ((ch - 100) / Math.max(1, m.lines));
+          s += '<line x1="' + (cx + 14) + '" y1="' + yy + '" x2="' + (cx + cw - 14) + '" y2="' + yy + '" stroke="' + lc + '" stroke-width="2"/>';
         } else {
-          var xx = 50 + i * (100 / Math.max(1, m.lines));
-          svg += '<line x1="' + xx + '" y1="24" x2="' + xx + '" y2="376" stroke="rgba(0,0,0,.18)" stroke-width="2"/>';
+          var xx = cx + 34 + i * ((cw - 68) / Math.max(1, m.lines));
+          s += '<line x1="' + xx + '" y1="' + (cy + 12) + '" x2="' + xx + '" y2="' + (cy + ch - 12) + '" stroke="' + lc + '" stroke-width="2"/>';
         }
       }
     }
-    // kruk
-    var hx = handleLeft ? 30 : 170;
+
+    // kruk / greep
     var isGreep = line.handleType === "greep";
     if (state.handleId !== "geen") {
-      if (isGreep) svg += '<rect x="' + (hx - 3) + '" y="150" width="6" height="90" rx="3" fill="#2a2a2a"/>';
-      else svg += '<rect x="' + (handleLeft ? hx : hx - 22) + '" y="205" width="22" height="6" rx="3" fill="#8a8378"/>';
+      var hcol = state.lockColor === "zwart" ? "#1c1c1e" : "#9a948a";
+      if (isGreep) {
+        var gx2 = handleLeft ? dx + 10 : dx + dw - 16;
+        s += '<rect x="' + gx2 + '" y="150" width="6" height="90" rx="3" fill="#222"/>';
+      } else {
+        var hxx = handleLeft ? dx + 8 : dx + dw - 30;
+        s += '<circle cx="' + (handleLeft ? dx + 12 : dx + dw - 12) + '" cy="208" r="5" fill="' + hcol + '"/>';
+        s += '<rect x="' + hxx + '" y="205" width="22" height="5" rx="2.5" fill="' + hcol + '"/>';
+      }
     }
-    svg += "</svg>";
-    return h("div", { class: "door-shell", html: svg });
+    s += "</svg>";
+    return s;
   }
-  function gradStops(g) {
-    var m = g.match(/#[0-9a-fA-F]{3,6}/g) || ["#ccc", "#bbb"];
-    return '<stop offset="0%" stop-color="' + m[0] + '"/><stop offset="100%" stop-color="' + (m[1] || m[0]) + '"/>';
-  }
+
+  // kleur-helpers
+  function hexToRgb(hx) { hx = hx.replace("#", ""); if (hx.length === 3) hx = hx.split("").map(function (c) { return c + c; }).join(""); return [parseInt(hx.slice(0, 2), 16), parseInt(hx.slice(2, 4), 16), parseInt(hx.slice(4, 6), 16)]; }
+  function luma(hx) { try { var r = hexToRgb(hx); return 0.299 * r[0] + 0.587 * r[1] + 0.114 * r[2]; } catch (e) { return 200; } }
+  function shade(hx, amt) { try { var r = hexToRgb(hx).map(function (v) { return Math.max(0, Math.min(255, v + amt)); }); return "#" + r.map(function (v) { return ("0" + v.toString(16)).slice(-2); }).join(""); } catch (e) { return hx; } }
+  function hashStr(s) { var h2 = 0; for (var i = 0; i < s.length; i++) { h2 = (h2 << 5) - h2 + s.charCodeAt(i); h2 |= 0; } return h2; }
 
   function coreName(line) { var c = line.cores.filter(function (x) { return x.id === state.coreId; })[0]; return c ? c.name : "—"; }
   function glassName(line) { var g = line.glassOptions.filter(function (x) { return x.id === state.glassId; })[0]; return g ? g.name : "—"; }
@@ -1735,6 +2054,337 @@ window.CATALOG = {
       .map(function (id) { return C.extras.filter(function (e) { return e.id === id; })[0].name + " ×" + state.extras[id]; });
     if (ex.length) o.Toebehoren = ex.join(", ");
     return o;
+  }
+
+  /* ====================================================================== *
+   *  WINKELMANDJE
+   * ====================================================================== */
+  function renderCart() {
+    var kids = [h("h2", {}, ["Je winkelmandje"])];
+    if (!state.cart.length) {
+      kids.push(h("div", { class: "empty-state" }, [
+        h("div", { class: "es-ic" }, ["🛒"]),
+        h("p", {}, ["Je mandje is nog leeg."]),
+        h("button", { class: "btn primary", onclick: function () { goView("config"); } }, ["Stel je eerste deur samen →"]),
+      ]));
+      return card("", kids);
+    }
+    kids.push(h("div", { class: "cart-list" }, state.cart.map(function (it) {
+      return h("div", { class: "cart-item" }, [
+        h("div", { class: "ci-thumb", html: it.thumb }, []),
+        h("div", { class: "ci-body" }, [
+          h("div", { class: "ci-title" }, [it.lineName]),
+          h("div", { class: "ci-sub" }, [it.label]),
+          h("div", { class: "ci-actions" }, [
+            h("button", { class: "link-btn", onclick: function () { loadCartItem(it.uid); } }, ["✎ Wijzig"]),
+            h("button", { class: "link-btn danger", onclick: function () { removeCartItem(it.uid); } }, ["🗑 Verwijder"]),
+          ]),
+        ]),
+        h("div", { class: "ci-right" }, [
+          h("div", { class: "ci-qty" }, [
+            h("button", { class: "rnd sm", onclick: function () { it.qty = Math.max(1, it.qty - 1); render(); } }, ["−"]),
+            h("span", {}, [String(it.qty)]),
+            h("button", { class: "rnd sm", onclick: function () { it.qty += 1; render(); } }, ["+"]),
+          ]),
+          h("div", { class: "ci-price" }, [euro(cartItemTotal(it))]),
+        ]),
+      ]);
+    })));
+
+    var tot = cartTotal();
+    kids.push(h("div", { class: "cart-summary" }, [
+      state.audience === "aannemer"
+        ? h("div", { class: "cs-line" }, [h("span", {}, ["Subtotaal excl. btw"]), h("span", {}, [fmt(toExcl(tot))])]) : null,
+      state.audience === "aannemer"
+        ? h("div", { class: "cs-line" }, [h("span", {}, ["Btw 21%"]), h("span", {}, [fmt(tot - toExcl(tot))])]) : null,
+      h("div", { class: "cs-line total" }, [h("span", {}, ["Totaal incl. btw"]), h("span", {}, [fmt(tot)])]),
+      h("p", { class: "cs-note" }, ["Levering/plaatsing en eventuele kortingen worden bevestigd bij de bestelling."]),
+      h("div", { class: "cart-cta" }, [
+        h("button", { class: "btn ghost", onclick: function () { goView("config"); } }, ["← Deur toevoegen"]),
+        h("button", { class: "btn primary lg", onclick: function () { goView("checkout"); } }, ["Bestellen →"]),
+      ]),
+    ]));
+    return card("", kids);
+  }
+
+  /* ====================================================================== *
+   *  CHECKOUT / BESTELLING
+   * ====================================================================== */
+  function renderCheckout() {
+    if (!state.cart.length) { state.view = "cart"; return renderCart(); }
+    var co = state.checkout;
+    var kids = [h("h2", {}, ["Je bestelling afronden"])];
+
+    kids.push(h("div", { class: "checkout-grid" }, [
+      h("div", { class: "co-form" }, [
+        h("h3", {}, ["Jouw gegevens"]),
+        h("div", { class: "form-grid" }, [
+          cofield("voornaam", "Voornaam", "text", true),
+          cofield("naam", "Naam", "text", true),
+          cofield("email", "E-mail", "email", true),
+          cofield("tel", "Telefoon", "tel", true),
+        ]),
+        h("h3", {}, ["Levering"]),
+        h("div", { class: "opt-grid" }, [
+          delivOpt("levering", "🚚 Leveren", "Aan huis geleverd"),
+          delivOpt("afhalen", "🏬 Afhalen", "In de toonzaal"),
+        ]),
+        co.delivery !== "afhalen" ? h("div", { class: "form-grid" }, [
+          cofield("straat", "Straat + nr.", "text", true),
+          cofield("postcode", "Postcode", "text", true),
+          cofield("gemeente", "Gemeente", "text", true),
+          cofield("land", "Land", "text", false),
+        ]) : null,
+        h("textarea", { id: "co-opmerking", placeholder: "Opmerking bij je bestelling (optioneel)", rows: "3", oninput: function (e) { co.opmerking = e.target.value; } }, [co.opmerking || ""]),
+        h("label", { class: "chk" }, [
+          h("input", { type: "checkbox", id: "co-akkoord", checked: co.akkoord ? "checked" : null, onchange: function (e) { co.akkoord = e.target.checked; } }),
+          h("span", {}, [" Ik ga akkoord met de verwerking van mijn gegevens en de algemene voorwaarden."]),
+        ]),
+        h("div", { id: "co-msg", class: "quote-msg" }, []),
+        h("div", { class: "btn-row" }, [
+          h("button", { class: "btn ghost", onclick: function () { goView("cart"); } }, ["← Terug naar mandje"]),
+          h("button", { class: "btn primary lg", onclick: submitOrder }, ["Bestelling plaatsen"]),
+        ]),
+        h("p", { class: "disclaimer" }, ["Dit is een testversie: je plaatst een bestelaanvraag zonder online betaling. Betaling (bv. via Bancontact/Mollie) kan bij livegang op Combell worden toegevoegd."]),
+      ]),
+      h("aside", { class: "co-summary" }, [
+        h("h3", {}, ["Overzicht"]),
+        h("div", { class: "co-items" }, state.cart.map(function (it) {
+          return h("div", { class: "co-item" }, [
+            h("div", { class: "coi-thumb", html: it.thumb }, []),
+            h("div", {}, [h("strong", {}, [it.lineName + " ×" + it.qty]), h("br"), h("small", {}, [it.finishName])]),
+            h("span", { class: "coi-price" }, [euro(cartItemTotal(it))]),
+          ]);
+        })),
+        cartTotalBlock(),
+      ]),
+    ]));
+    return card("", kids);
+  }
+  function cofield(id, label, type, req) {
+    var co = state.checkout;
+    return h("div", { class: "field" }, [
+      h("label", {}, [label + (req ? " *" : "")]),
+      h("input", { id: "co-" + id, type: type, value: co[id] || "", oninput: function (e) { co[id] = e.target.value; } }, []),
+    ]);
+  }
+  function delivOpt(id, t, d) {
+    var co = state.checkout;
+    if (!co.delivery) co.delivery = "levering";
+    return h("button", { class: "opt" + (co.delivery === id ? " sel" : ""), onclick: function () { co.delivery = id; render(); } }, [h("strong", {}, [t]), h("br"), h("small", {}, [d])]);
+  }
+  function cartTotalBlock() {
+    var tot = cartTotal();
+    return h("div", { class: "cart-summary" }, [
+      state.audience === "aannemer" ? h("div", { class: "cs-line" }, [h("span", {}, ["Excl. btw"]), h("span", {}, [fmt(toExcl(tot))])]) : null,
+      state.audience === "aannemer" ? h("div", { class: "cs-line" }, [h("span", {}, ["Btw 21%"]), h("span", {}, [fmt(tot - toExcl(tot))])]) : null,
+      h("div", { class: "cs-line total" }, [h("span", {}, ["Totaal incl. btw"]), h("span", {}, [fmt(tot)])]),
+    ]);
+  }
+
+  function submitOrder() {
+    var co = state.checkout, msg = $("#co-msg");
+    var need = ["voornaam", "naam", "email", "tel"];
+    if (co.delivery !== "afhalen") need = need.concat(["straat", "postcode", "gemeente"]);
+    for (var i = 0; i < need.length; i++) {
+      if (!(co[need[i]] || "").trim()) { msg.className = "quote-msg err"; msg.textContent = "Vul alle verplichte velden in."; return; }
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(co.email || "")) { msg.className = "quote-msg err"; msg.textContent = "Vul een geldig e-mailadres in."; return; }
+    if (!co.akkoord) { msg.className = "quote-msg err"; msg.textContent = "Bevestig de voorwaarden om te bestellen."; return; }
+
+    var payload = {
+      type: "bestelling",
+      klant: co,
+      items: state.cart.map(function (it) { return { omschrijving: it.label, aantal: it.qty, prijsIncl: cartItemTotal(it), config: it.cfg }; }),
+      totaalIncl: cartTotal(),
+      totaalTekst: fmt(cartTotal()),
+    };
+    msg.className = "quote-msg"; msg.textContent = "Bezig met plaatsen…";
+    fetch("order.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (res) { finishOrder(res && res.ordernr); })
+      .catch(function () { finishOrder(null); });
+  }
+  function finishOrder(ordernr) {
+    state.order = {
+      nr: ordernr || ("TEST-" + (1000 + Math.floor(state._seq * 137 % 9000))),
+      total: fmt(cartTotal()),
+      email: state.checkout.email,
+      items: state.cart.slice(),
+      delivery: state.checkout.delivery,
+    };
+    state.cart = [];
+    state.view = "done";
+    render();
+  }
+
+  function renderOrderDone() {
+    var o = state.order || {};
+    return card("", [
+      h("div", { class: "order-done" }, [
+        h("div", { class: "od-check" }, ["✓"]),
+        h("h2", {}, ["Bedankt voor je bestelling!"]),
+        h("p", { class: "lead" }, ["Je bestelling is geregistreerd onder nummer "]),
+        h("div", { class: "od-nr" }, [o.nr || "—"]),
+        h("p", {}, ["We sturen een bevestiging naar " + (o.email || "je e-mailadres") + ". " +
+          (o.delivery === "afhalen" ? "Je kan je deuren afhalen in de toonzaal na bevestiging." : "We nemen contact op voor de levering.")]),
+        h("div", { class: "od-total" }, ["Totaal: " + (o.total || "")]),
+        h("div", { class: "btn-row" }, [
+          h("button", { class: "btn primary", onclick: function () { state.step = 0; goView("config"); } }, ["Nog een deur samenstellen"]),
+          h("button", { class: "btn ghost", onclick: function () { window.print(); } }, ["🖨 Print bevestiging"]),
+        ]),
+      ]),
+    ]);
+  }
+
+  /* ====================================================================== *
+   *  KEUZEHULP (buying guide) — helpt particulieren kiezen
+   * ====================================================================== */
+  function renderGuide() {
+    var kids = [
+      h("div", { class: "guide-hero" }, [
+        h("h2", {}, ["Keuzehulp: zo kies je de juiste binnendeur"]),
+        h("p", { class: "lead" }, ["Geen expert? Geen probleem. We leggen in klare taal uit waar je op let — kern, geluid, maatnemen en draairichting — zodat je met een gerust hart kiest."]),
+        h("button", { class: "btn primary", onclick: function () { state.step = 1; goView("config"); } }, ["Liever meteen advies op maat? Start de configurator →"]),
+      ]),
+    ];
+
+    // 1. Deurkern vergelijken
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["1. De kern bepaalt gewicht, geluid en prijs"]),
+      h("p", { class: "gs-intro" }, ["Elke deur bestaat uit een kaderhout met een kern. Het type kern bepaalt hoe stevig, stil en duur de deur is."]),
+      h("div", { class: "core-compare" }, [
+        coreCard("Honingraat", "honingraat", "Lichte kartonnen celstructuur.", ["Voordeligst", "Licht"], ["Minder geluidsisolatie", "Gevoeliger voor stoten"], 2),
+        coreCard("Tubespaan", "tubespaan", "Stevige kern met luchtkanalen.", ["Beste prijs/kwaliteit", "Geluidsdempend (dB 32)", "Stevig & schokvast"], [], 4),
+        coreCard("Volspaan", "volspaan", "Massieve, volle spaanplaat.", ["Beste geluidsisolatie", "Brandwerend mogelijk"], ["Zwaarder", "Duurder"], 5),
+      ]),
+      h("p", { class: "gs-tip" }, ["💡 Onze tip: voor de meeste woningen is tubespaan de gulden middenweg. Kies volspaan bij slaapkamers/bureau waar stilte telt of waar een brandwerende deur nodig is."]),
+    ]));
+
+    // 2. Geluid
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["2. Hoeveel geluidsisolatie heb je nodig?"]),
+      h("div", { class: "db-scale" }, [
+        dbRow("Berging / technische ruimte", "Honingraat volstaat", 25, "#c9c4ba"),
+        dbRow("Leefruimte / gang", "Tubespaan (dB 32)", 32, "#8bbf2a"),
+        dbRow("Slaapkamer / bureau", "Tubespaan of volspaan", 36, "#17615f"),
+        dbRow("Home cinema / muziek", "Volspaan, dichte deur", 40, "#0e4948"),
+      ]),
+      h("p", { class: "gs-tip" }, ["💡 Een zwaardere, dichtere deur dempt meer geluid. Een goede aansluiting van kast en dichting is minstens even belangrijk als de deur zelf."]),
+    ]));
+
+    // 3. Opmeten
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["3. Correct opmeten in 3 stappen"]),
+      h("div", { class: "measure-grid" }, [
+        measureStep("1", "📏", "Meet de breedte", "Meet de muuropening op 3 hoogtes (boven, midden, onder) en noteer de kleinste maat."),
+        measureStep("2", "📐", "Meet de hoogte", "Meet links, midden en rechts van vloer tot bovenkant opening. Noteer de kleinste maat."),
+        measureStep("3", "🧱", "Meet de muurdikte", "Meet de dikte van de muur op enkele plaatsen — die bepaalt de breedte van de deurkast."),
+      ]),
+      h("div", { class: "measure-tool" }, [renderMeasureTool()]),
+    ]));
+
+    // 4. Draairichting
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["4. Draairichting: links of rechts?"]),
+      h("p", { class: "gs-intro" }, ["Ga staan aan de kant waar de deur naar je toe opent. Zitten de scharnieren links? Dan is het een linksdraaiende deur. Rechts? Dan rechtsdraaiend."]),
+      h("div", { class: "swing-demo" }, [
+        swingCard("links", "Linksdraaiend", "Scharnieren links, kruk rechts."),
+        swingCard("rechts", "Rechtsdraaiend", "Scharnieren rechts, kruk links."),
+      ]),
+    ]));
+
+    // 5. FAQ
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["5. Veelgestelde vragen"]),
+      faq("Welke deur voor een badkamer of toilet?", "Kies bij voorkeur een vochtbestendige uitvoering en een WC-/vrij-bezetslot. Onze 'te verven' deuren voor hoge modellen gebruiken vochtwerend MDF."),
+      faq("Wat betekent 'verdoken scharnieren'?", "De scharnieren zitten onzichtbaar weggewerkt in de deur en kast. Dat geeft een strakke, moderne look zonder zichtbaar beslag."),
+      faq("Wat is een magnetisch slot?", "Bij het sluiten trekt een magneet in de sluitplaat de schoot aan. Geen kletterend geluid en een net, vlak resultaat."),
+      faq("Moet ik zelf schilderen?", "Alleen bij de 'te verven' deuren. Alle andere afwerkingen (mat, hout, beton, staal-glas) zijn kant-en-klaar afgewerkt."),
+      faq("Kan ik plafondhoge deuren krijgen?", "Ja. Met de Loft-lijnen ga je tot 231,5 cm en met Endless Loft tot 300 cm, volledig op maat."),
+    ]));
+
+    kids.push(h("div", { class: "guide-cta" }, [
+      h("h3", {}, ["Klaar om te kiezen?"]),
+      h("button", { class: "btn primary lg", onclick: function () { state.step = 1; goView("config"); } }, ["Start de configurator met advies →"]),
+    ]));
+
+    return card("guide", kids);
+  }
+
+  function coreCard(name, coreType, desc, pros, cons, sound) {
+    return h("div", { class: "core-card" }, [
+      h("div", { class: "core-cross", html: coreCrossSVG(coreType) }, []),
+      h("h4", {}, [name]),
+      h("p", {}, [desc]),
+      h("div", { class: "sound-meter" }, [
+        h("span", { class: "sm-lbl" }, ["Geluid"]),
+        h("div", { class: "sm-bar" }, [h("i", { style: "width:" + (sound * 20) + "%" }, [])]),
+      ]),
+      h("ul", { class: "pros" }, pros.map(function (p) { return h("li", {}, ["✓ " + p]); })),
+      h("ul", { class: "cons" }, cons.map(function (c) { return h("li", {}, ["– " + c]); })),
+    ]);
+  }
+  function coreCrossSVG(type) {
+    var s = '<svg viewBox="0 0 120 60">';
+    s += '<rect x="2" y="8" width="116" height="44" rx="2" fill="#e9e3d6" stroke="#c9b98f"/>';
+    s += '<rect x="8" y="8" width="6" height="44" fill="#c9a25f"/><rect x="106" y="8" width="6" height="44" fill="#c9a25f"/>';
+    if (type === "honingraat") {
+      for (var x = 20; x < 104; x += 12) for (var y = 12; y < 50; y += 10) s += '<polygon points="' + x + ',' + y + ' ' + (x + 6) + ',' + (y + 3) + ' ' + (x + 6) + ',' + (y + 8) + ' ' + x + ',' + (y + 11) + ' ' + (x - 6) + ',' + (y + 8) + ' ' + (x - 6) + ',' + (y + 3) + '" fill="none" stroke="#d8b98a" stroke-width="0.8"/>';
+    } else if (type === "tubespaan") {
+      for (var xx = 22; xx < 104; xx += 11) s += '<rect x="' + xx + '" y="12" width="6" height="36" rx="3" fill="#ffffff" stroke="#cbb98a" stroke-width="0.8"/>';
+    } else {
+      s += '<rect x="18" y="12" width="86" height="36" fill="#d7c4a0"/>';
+    }
+    s += "</svg>";
+    return s;
+  }
+  function dbRow(place, rec, db, col) {
+    return h("div", { class: "db-row" }, [
+      h("span", { class: "db-place" }, [place]),
+      h("div", { class: "db-track" }, [h("i", { style: "width:" + ((db - 20) / 22 * 100) + "%;background:" + col }, [db + " dB"])]),
+      h("span", { class: "db-rec" }, [rec]),
+    ]);
+  }
+  function measureStep(n, ic, t, d) {
+    return h("div", { class: "measure-step" }, [
+      h("div", { class: "ms-num" }, [n]),
+      h("div", { class: "ms-ic" }, [ic]),
+      h("strong", {}, [t]),
+      h("p", {}, [d]),
+    ]);
+  }
+  // interactieve opmeethulp: muuropening → aanbevolen deurbreedte
+  function renderMeasureTool() {
+    var wrap = h("div", { class: "mt-inner" }, []);
+    function build() {
+      wrap.innerHTML = "";
+      var opening = state._mtOpening || 830;
+      // mapping muuropening → deurbreedte (op basis van catalogus: opening ≈ breedte + ~76mm marge)
+      var doorW = Math.round((opening - 76) / 10) * 10;
+      var nearest = [630, 680, 730, 780, 830, 880, 930, 980, 1030].reduce(function (a, b) { return Math.abs(b - doorW) < Math.abs(a - doorW) ? b : a; });
+      wrap.appendChild(h("label", { class: "mt-lbl" }, ["Muuropening (breedte): " + opening + " mm"]));
+      wrap.appendChild(h("input", { type: "range", min: 700, max: 1100, step: 5, value: opening, oninput: function (e) { state._mtOpening = +e.target.value; build(); } }, []));
+      wrap.appendChild(h("div", { class: "mt-result" }, [
+        h("span", {}, ["Aanbevolen deurbreedte:"]),
+        h("strong", {}, [(nearest / 10) + " cm"]),
+      ]));
+    }
+    build();
+    return h("div", {}, [h("h4", {}, ["🔧 Snelle opmeethulp"]), wrap, h("p", { class: "mt-note" }, ["Indicatief. De exacte maat hangt af van kast en afwerking — twijfel je? Wij helpen je graag."])]);
+  }
+  function swingCard(dir, t, d) {
+    var left = dir === "links";
+    var s = '<svg viewBox="0 0 120 90">';
+    s += '<rect x="' + (left ? 18 : 84) + '" y="15" width="4" height="60" fill="#17615f"/>'; // scharnierpaal
+    s += '<path d="M' + (left ? 22 : 98) + ',18 ' + (left ? "A56 56 0 0 1 78 74" : "A56 56 0 0 0 22 74") + '" fill="none" stroke="#c9c4ba" stroke-dasharray="3 3"/>';
+    s += '<rect x="' + (left ? 22 : 38) + '" y="18" width="60" height="8" rx="2" fill="#8bbf2a" transform="rotate(' + (left ? 28 : -28) + ' ' + (left ? 22 : 98) + ' 22)"/>';
+    s += '<circle cx="' + (left ? 84 : 34) + '" cy="70" r="3" fill="#17615f"/>';
+    s += "</svg>";
+    return h("div", { class: "swing-card" }, [h("div", { class: "sw-svg", html: s }, []), h("strong", {}, [t]), h("small", {}, [d])]);
+  }
+  function faq(q, a) {
+    return h("details", { class: "faq" }, [h("summary", {}, [q]), h("p", {}, [a])]);
   }
 
   /* ---- init ------------------------------------------------------------- */

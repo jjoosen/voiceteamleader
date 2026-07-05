@@ -16,13 +16,25 @@ fabrikantsnaam in de interface.
    btw + btw-lijn en incl.-totaal).
 2. **Adviesmotor** — 6 eenvoudige vragen (ruimte, look, budget, hoogte, glas,
    geluid) → scoort alle productlijnen en beveelt de beste aan.
-3. **Configuratie in stappen** — lijn → afwerking → model → maat & draairichting
+3. **Keuzehulp** — een grafische gids die particulieren helpt kiezen:
+   kernvergelijking (honingraat/tubespaan/volspaan) met doorsnedes en
+   geluidsmeters, dB-schaal per ruimte, een interactieve opmeethulp
+   (muuropening → deurbreedte), uitleg over draairichting (DIN links/rechts)
+   en een FAQ.
+4. **Configuratie in stappen** — lijn → afwerking → model → maat & draairichting
    → deurkast/slot/kruk → toebehoren.
-4. **Live preview + live prijs** — een SVG-deur toont afwerking, model, glas,
-   krukzijde en kastkleur; de prijs herberekent bij elke keuze.
-5. **Offerte-aanvraag** — klant vult zijn gegevens in; de volledige configuratie
-   + richtprijs wordt per e-mail verstuurd (met mailto-fallback) en lokaal
-   bewaard. Optionele hook om door te sturen naar Teamleader.
+5. **Live showroom-preview + live prijs** — een SVG-deur in een kamerscène
+   (vloer, muur, plint, schaduw, houtnerf, glasreflectie) toont afwerking,
+   model, glas, krukzijde en kastkleur; de prijs herberekent bij elke keuze.
+6. **Webshop / bestelsysteem** — voeg samengestelde deuren toe aan een
+   **winkelmandje** (wijzigen, aantallen, verwijderen), reken af via een
+   **checkout** (klantgegevens, leveren/afhalen) en plaats een **bestelling**
+   met bestelnummer + bevestigingsmail. *Testversie zonder online betaling;
+   een betaalprovider (bv. Mollie/Bancontact) kan bij livegang worden
+   gekoppeld in `order.php`.*
+7. **Offerte-aanvraag** — als alternatief kan de klant ook een vrijblijvende
+   offerte/advies vragen (e-mail + mailto-fallback), met optionele
+   Teamleader-hook.
 
 ## Productlijnen (data-gedreven)
 
@@ -46,6 +58,7 @@ zonder de logica aan te passen.
 | `assets/app.js` | Adviesmotor, prijsberekening, live preview, wizard |
 | `assets/style.css` | Styling |
 | `lead.php` | Verwerkt offerte-aanvraag (e-mail + optioneel Teamleader) |
+| `order.php` | Verwerkt bestelling (bestelnummer, e-mail verkoper + klant) |
 | `config.example.php` | Kopieer naar `config.php` en vul je e-mail in |
 | `standalone.html` | **Zelfstandige één-bestand-versie** (voor snelle test / iframe) |
 | `data/` | Afgeschermde opslag van offerte-aanvragen |

@@ -35,6 +35,8 @@ $asset_v = @filemtime(__DIR__ . '/assets/app.js') ?: time();
     </div>
   </header>
 
+  <div class="mainnav-bar"><nav id="mainnav" class="mainnav" aria-label="Hoofdnavigatie"></nav></div>
+
   <nav id="stepper" aria-label="Stappen"></nav>
 
   <main id="app" aria-live="polite"><!-- app rendert hier --></main>
