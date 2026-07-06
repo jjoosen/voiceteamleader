@@ -508,6 +508,24 @@
       { room: "Toilet", qty: 2, width: 63, height: 201.5 },
       { room: "Berging / wasplaats", qty: 2, width: 78, height: 201.5 },
     ] },
+    // afgestemd op het aangeleverde grondplan (gvl + verdieping + zolder)
+    { id: "voorbeeldplan", name: "Voorbeeldplan (villa)", ic: "📋", rows: [
+      { room: "Bureau (gvl)", qty: 1, width: 88, height: 231.5 },
+      { room: "Toilet (gvl)", qty: 1, width: 63, height: 231.5 },
+      { room: "Koele berging", qty: 1, width: 73, height: 231.5 },
+      { room: "Achterinkom", qty: 1, width: 83, height: 231.5 },
+      { room: "Garage (binnendeur)", qty: 1, width: 88, height: 231.5 },
+      { room: "Master bedroom", qty: 1, width: 88, height: 211.5 },
+      { room: "Dressing", qty: 1, width: 78, height: 211.5 },
+      { room: "Badkamer", qty: 1, width: 83, height: 211.5 },
+      { room: "Wasplaats", qty: 1, width: 73, height: 211.5 },
+      { room: "Slaapkamer 2", qty: 1, width: 83, height: 211.5 },
+      { room: "Slaapkamer 3", qty: 1, width: 83, height: 211.5 },
+      { room: "Badkamer 2", qty: 1, width: 78, height: 211.5 },
+      { room: "Toilet (verdiep)", qty: 1, width: 63, height: 211.5 },
+      { room: "Polyvalente ruimte (zolder)", qty: 1, width: 83, height: 201.5 },
+      { room: "Techniek (zolder)", qty: 1, width: 73, height: 201.5 },
+    ] },
   ];
 
   function renderBouw() {
@@ -1827,6 +1845,14 @@
           cofield("land", "Land", "text", false),
         ]) : null,
         h("textarea", { id: "co-opmerking", placeholder: "Opmerking bij je bestelling (optioneel)", rows: "3", oninput: function (e) { co.opmerking = e.target.value; } }, [co.opmerking || ""]),
+
+        h("h3", {}, ["Betaalwijze"]),
+        h("div", { class: "opt-grid pay-grid" }, [
+          payOpt("bancontact", "Bancontact", "Betaal online"),
+          payOpt("kaart", "Kredietkaart", "Visa / Mastercard"),
+          payOpt("overschrijving", "Overschrijving", "Betaal later per bank"),
+        ]),
+
         h("label", { class: "chk" }, [
           h("input", { type: "checkbox", id: "co-akkoord", checked: co.akkoord ? "checked" : null, onchange: function (e) { co.akkoord = e.target.checked; } }),
           h("span", {}, [" Ik ga akkoord met de verwerking van mijn gegevens en de algemene voorwaarden."]),
@@ -1834,9 +1860,11 @@
         h("div", { id: "co-msg", class: "quote-msg" }, []),
         h("div", { class: "btn-row" }, [
           h("button", { class: "btn ghost", onclick: function () { goView("cart"); } }, ["← Terug naar mandje"]),
-          h("button", { class: "btn primary lg", onclick: submitOrder }, ["Bestelling plaatsen"]),
+          h("button", { class: "btn primary lg", onclick: submitOrder }, [
+            (co.payment === "overschrijving" ? "Bestelling plaatsen" : "Afrekenen") + " · " + fmt(cartTotal()),
+          ]),
         ]),
-        h("p", { class: "disclaimer" }, ["Dit is een testversie: je plaatst een bestelaanvraag zonder online betaling. Betaling (bv. via Bancontact/Mollie) kan bij livegang op Combell worden toegevoegd."]),
+        h("p", { class: "disclaimer" }, ["Online betalen is hier een testsimulatie (geen echte transactie). Bij livegang op Combell koppelen we een betaalprovider (bv. Bancontact) — bewust nog even achterwege."]),
       ]),
       h("aside", { class: "co-summary" }, [
         h("h3", {}, ["Overzicht"]),
@@ -1864,6 +1892,14 @@
     if (!co.delivery) co.delivery = "levering";
     return h("button", { class: "opt" + (co.delivery === id ? " sel" : ""), onclick: function () { co.delivery = id; render(); } }, [h("strong", {}, [t]), h("br"), h("small", {}, [d])]);
   }
+  function payOpt(id, t, d) {
+    var co = state.checkout;
+    if (!co.payment) co.payment = "bancontact";
+    return h("button", { class: "opt pay-opt" + (co.payment === id ? " sel" : ""), onclick: function () { co.payment = id; render(); } }, [
+      h("span", { class: "pay-ic pay-" + id }, []),
+      h("strong", {}, [t]), h("br"), h("small", {}, [d]),
+    ]);
+  }
   function cartTotalBlock() {
     var tot = cartTotal();
     return h("div", { class: "cart-summary" }, [
@@ -1890,19 +1926,51 @@
       totaalIncl: cartTotal(),
       totaalTekst: fmt(cartTotal()),
     };
-    msg.className = "quote-msg"; msg.textContent = "Bezig met plaatsen…";
-    fetch("order.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
-      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
-      .then(function (res) { finishOrder(res && res.ordernr); })
-      .catch(function () { finishOrder(null); });
+
+    var finalize = function () {
+      msg.className = "quote-msg"; msg.textContent = "Bestelling registreren…";
+      fetch("order.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+        .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+        .then(function (res) { finishOrder(res && res.ordernr); })
+        .catch(function () { finishOrder(null); });
+    };
+
+    if (co.payment === "overschrijving") { finalize(); return; }
+    // online betaling → simulatie (geen echte transactie / geen Mollie)
+    runPaymentSim(co.payment, cartTotal(), finalize);
   }
+
+  // gesimuleerde beveiligde betaling
+  function runPaymentSim(method, amount, done) {
+    var names = { bancontact: "Bancontact", kaart: "Kredietkaart" };
+    var ov = h("div", { class: "pay-overlay" }, [
+      h("div", { class: "pay-modal" }, [
+        h("div", { class: "pay-brand" }, [names[method] || "Online betaling"]),
+        h("div", { class: "pay-amount" }, [fmt(amount)]),
+        h("div", { class: "pay-spinner" }, []),
+        h("div", { class: "pay-status", id: "pay-status" }, ["Beveiligde verbinding opzetten…"]),
+        h("div", { class: "pay-sim-note" }, ["Testsimulatie — er wordt geen echt bedrag afgeschreven."]),
+      ]),
+    ]);
+    document.body.appendChild(ov);
+    var st = ov.querySelector("#pay-status");
+    setTimeout(function () { st.textContent = "Betaling verwerken…"; }, 900);
+    setTimeout(function () {
+      st.textContent = "Betaling geslaagd ✓"; ov.querySelector(".pay-modal").classList.add("ok");
+    }, 1800);
+    setTimeout(function () { ov.remove(); state.checkout.paid = true; done(); }, 2500);
+  }
+
   function finishOrder(ordernr) {
+    var co = state.checkout;
     state.order = {
-      nr: ordernr || ("TEST-" + (1000 + Math.floor(state._seq * 137 % 9000))),
+      nr: ordernr || ("BD-" + (1000 + Math.floor(state._seq * 137 % 9000))),
       total: fmt(cartTotal()),
-      email: state.checkout.email,
+      email: co.email,
       items: state.cart.slice(),
-      delivery: state.checkout.delivery,
+      delivery: co.delivery,
+      payment: co.payment,
+      paid: co.payment !== "overschrijving",
     };
     state.cart = [];
     state.view = "done";
@@ -1919,6 +1987,10 @@
         h("div", { class: "od-nr" }, [o.nr || "—"]),
         h("p", {}, ["We sturen een bevestiging naar " + (o.email || "je e-mailadres") + ". " +
           (o.delivery === "afhalen" ? "Je kan je deuren afhalen in de toonzaal na bevestiging." : "We nemen contact op voor de levering.")]),
+        h("div", { class: "od-pay " + (o.paid ? "paid" : "topay") }, [
+          o.paid ? "✓ Betaald (" + (o.payment === "kaart" ? "kredietkaart" : "Bancontact") + ") — simulatie"
+                 : "Te betalen via overschrijving — je ontvangt de gegevens per e-mail",
+        ]),
         h("div", { class: "od-total" }, ["Totaal: " + (o.total || "")]),
         h("div", { class: "btn-row" }, [
           h("button", { class: "btn primary", onclick: function () { state.step = 0; goView("config"); } }, ["Nog een deur samenstellen"]),

@@ -300,7 +300,7 @@ h3 { font-size: 16px; margin: 0 0 10px; }
 .plan-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .pt-pdf { padding: 8px; font-size: 11px; word-break: break-word; }
 .pt-del { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,.55); color: #fff; cursor: pointer; font-size: 11px; }
-.hometype-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.hometype-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .hometype { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 2px solid var(--line); border-radius: 12px; padding: 16px; background: #fff; cursor: pointer; font: inherit; transition: .14s; }
 .hometype:hover { border-color: var(--teal); transform: translateY(-2px); }
 .ht-ic { font-size: 30px; }
@@ -445,6 +445,29 @@ h3 { font-size: 16px; margin: 0 0 10px; }
 .co-item { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; font-size: 13px; }
 .coi-thumb svg { width: 40px; height: 60px; border-radius: 4px; }
 .coi-price { font-weight: 700; }
+
+/* ===== betaalopties + simulatie ===== */
+.pay-grid { grid-template-columns: repeat(3, 1fr); }
+.pay-opt { display: flex; flex-direction: column; }
+.pay-ic { display: inline-block; width: 40px; height: 26px; border-radius: 5px; margin-bottom: 6px; background: #eee; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+.pay-ic.pay-bancontact { background: linear-gradient(90deg,#0a5bd3 50%,#ffd800 50%); }
+.pay-ic.pay-kaart { background: linear-gradient(120deg,#eb001b,#f79e1b); }
+.pay-ic.pay-overschrijving { background: #cfd8d7; position: relative; }
+.pay-ic.pay-overschrijving::after { content: "€"; position: absolute; inset: 0; display: grid; place-items: center; font-size: 14px; font-weight: 800; color: #4a5654; }
+.pay-overlay { position: fixed; inset: 0; background: rgba(15,30,30,.55); backdrop-filter: blur(2px); display: grid; place-items: center; z-index: 100; }
+.pay-modal { background: #fff; border-radius: 16px; padding: 30px 34px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,.3); min-width: 280px; }
+.pay-brand { font-weight: 800; color: var(--teal-d); letter-spacing: .5px; }
+.pay-amount { font-size: 30px; font-weight: 800; margin: 6px 0 16px; }
+.pay-spinner { width: 40px; height: 40px; margin: 0 auto 14px; border: 4px solid #e3e0d9; border-top-color: var(--teal); border-radius: 50%; animation: spin .8s linear infinite; }
+.pay-modal.ok .pay-spinner { border: none; background: var(--lime); border-radius: 50%; position: relative; animation: none; }
+.pay-modal.ok .pay-spinner::after { content: "✓"; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-size: 22px; font-weight: 800; }
+.pay-status { font-weight: 600; }
+.pay-sim-note { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.od-pay { display: inline-block; padding: 8px 16px; border-radius: 999px; font-weight: 600; font-size: 13.5px; margin: 6px 0; }
+.od-pay.paid { background: #eaf6e3; color: #3d7a24; }
+.od-pay.topay { background: #fbf3e6; color: #9a6a1a; }
+@media (prefers-reduced-motion: reduce) { .pay-spinner { animation: none; } }
 
 /* ===== bestelbevestiging ===== */
 .order-done { text-align: center; padding: 20px; }

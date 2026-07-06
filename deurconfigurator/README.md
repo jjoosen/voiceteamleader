@@ -23,15 +23,23 @@ fabrikantsnaam in de interface.
    en een FAQ.
 4. **Configuratie in stappen** — lijn → afwerking → model → maat & draairichting
    → deurkast/slot/kruk → toebehoren.
-5. **Live showroom-preview + live prijs** — een SVG-deur in een kamerscène
-   (vloer, muur, plint, schaduw, houtnerf, glasreflectie) toont afwerking,
-   model, glas, krukzijde en kastkleur; de prijs herberekent bij elke keuze.
-6. **Webshop / bestelsysteem** — voeg samengestelde deuren toe aan een
+5. **Live showroom-preview + live prijs** — een deur in een kamerscène met
+   **echte materiaalfoto's** (houtnerf, marmer, gelakt, staal-glas) en een
+   houten vloer; toont afwerking, model, glas, krukzijde en kastkleur; de
+   prijs herberekent bij elke keuze. De houtnerf en marmerstructuur komen van
+   echte foto's, per afwerking op kleur gezet (rechtenvrij ingebed in
+   `assets/textures.js`). Voor productie kan je ze 1-op-1 vervangen door de
+   eigen productfoto's van de fabrikant.
+6. **Bouwselector** — kies vooraf tussen *gewoon kiezen* of de *bouwselector*.
+   Upload je bouwplan (foto/PDF), kies een woningtype (incl. een preset op maat
+   van het aangeleverde voorbeeldplan), pas de deurenlijst aan (ruimte, aantal,
+   breedte, hoogte) en zet in één keer alle deuren in het winkelmandje.
+7. **Webshop / bestelsysteem** — voeg samengestelde deuren toe aan een
    **winkelmandje** (wijzigen, aantallen, verwijderen), reken af via een
-   **checkout** (klantgegevens, leveren/afhalen) en plaats een **bestelling**
-   met bestelnummer + bevestigingsmail. *Testversie zonder online betaling;
-   een betaalprovider (bv. Mollie/Bancontact) kan bij livegang worden
-   gekoppeld in `order.php`.*
+   **checkout** (klantgegevens, leveren/afhalen, betaalwijze) en plaats een
+   **bestelling** met bestelnummer + bevestigingsmail. Online betalen
+   (Bancontact/kaart) is een **testsimulatie** — een echte betaalprovider
+   (bv. Bancontact/Mollie) wordt bij livegang gekoppeld in `order.php`.
 7. **Offerte-aanvraag** — als alternatief kan de klant ook een vrijblijvende
    offerte/advies vragen (e-mail + mailto-fallback), met optionele
    Teamleader-hook.
