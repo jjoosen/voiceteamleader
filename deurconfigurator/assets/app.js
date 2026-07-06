@@ -58,7 +58,7 @@
 
   /* ---- state ------------------------------------------------------------ */
   var state = {
-    view: "gallery",   // gallery | config | guide | cart | checkout | done
+    view: "start",     // start | gallery | bouw | config | guide | cart | checkout | done
     step: 0,
     audience: "gezin", // gezin (particulier) | aannemer (vakman)
     advice: {},        // antwoorden adviesmotor
@@ -85,6 +85,11 @@
     editingUid: null,  // bewerken van bestaand mandje-item
     checkout: {},      // klant + levering
     order: null,       // geplaatste bestelling
+    bouw: {            // bouwselector
+      plans: [], rows: [],
+      lineId: "invisible-flat", finishId: "soft-mat-white",
+      finishMode: "afgewerkt", paintColor: "ral9010", height: 201.5,
+    },
   };
 
   /* ====================================================================== *
@@ -291,7 +296,13 @@
     app.innerHTML = "";
     var stepperEl = $("#stepper");
 
-    if (state.view === "gallery") {
+    if (state.view === "start") {
+      app.appendChild(renderStart());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "bouw") {
+      app.appendChild(renderBouw());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "gallery") {
       app.appendChild(renderGallery());
       if (stepperEl) stepperEl.style.display = "none";
     } else if (state.view === "guide") {
@@ -338,6 +349,7 @@
     el.innerHTML = "";
     var items = [
       { id: "gallery", label: "Deuren", ic: "🏠" },
+      { id: "bouw", label: "Bouwselector", ic: "📐" },
       { id: "config", label: "Configureren", ic: "🚪" },
       { id: "guide", label: "Keuzehulp", ic: "💡" },
     ];
@@ -440,6 +452,249 @@
   }
   function backBtn() {
     return h("button", { class: "btn ghost", onclick: function () { state.step = Math.max(0, state.step - 1); render(); } }, ["← Terug"]);
+  }
+
+  /* ====================================================================== *
+   *  STARTKEUZE — gewoon kiezen of via de bouwselector
+   * ====================================================================== */
+  function renderStart() {
+    return card("start-hero", [
+      h("div", { class: "hero-badge" }, ["Binnendeuren op maat"]),
+      h("h1", {}, ["Hoe wil je starten?"]),
+      h("p", { class: "lead" }, ["Kies wat het best bij jou past. Je kan altijd wisselen via het menu bovenaan."]),
+      h("div", { class: "start-choice" }, [
+        h("button", { class: "start-card", onclick: function () { goView("gallery"); } }, [
+          h("div", { class: "sc-ic" }, ["🚪"]),
+          h("h3", {}, ["Ik kies gewoon mijn deuren"]),
+          h("p", {}, ["Blader door realistische voorbeelden en stel per deur je afwerking, maat en beslag samen."]),
+          h("span", { class: "sc-go" }, ["Naar de deuren →"]),
+        ]),
+        h("button", { class: "start-card feature", onclick: function () { goView("bouw"); } }, [
+          h("div", { class: "sc-ic" }, ["📐"]),
+          h("h3", {}, ["Doorloop de bouwselector"]),
+          h("p", {}, ["Upload je bouwplan(nen). We bepalen samen alle deuren, afmetingen en aantallen voor je project — in één keer besteld."]),
+          h("span", { class: "sc-go" }, ["Start de bouwselector →"]),
+          h("span", { class: "sc-badge" }, ["Ideaal voor nieuwbouw & renovatie"]),
+        ]),
+      ]),
+    ]);
+  }
+
+  /* ====================================================================== *
+   *  BOUWSELECTOR — plan uploaden → deuren, afmetingen & aantallen
+   * ====================================================================== */
+  var HOME_TYPES = [
+    { id: "appartement", name: "Appartement", ic: "🏢", rows: [
+      { room: "Inkomhal", qty: 1, width: 83, height: 201.5 },
+      { room: "Slaapkamer", qty: 2, width: 83, height: 201.5 },
+      { room: "Badkamer", qty: 1, width: 78, height: 201.5 },
+      { room: "Toilet", qty: 1, width: 63, height: 201.5 },
+      { room: "Berging", qty: 1, width: 73, height: 201.5 },
+    ] },
+    { id: "rijwoning", name: "Rij-/gesloten woning", ic: "🏠", rows: [
+      { room: "Inkomhal", qty: 1, width: 88, height: 211.5 },
+      { room: "Leefruimte", qty: 1, width: 88, height: 211.5 },
+      { room: "Slaapkamer", qty: 3, width: 83, height: 201.5 },
+      { room: "Badkamer", qty: 1, width: 78, height: 201.5 },
+      { room: "Toilet", qty: 2, width: 63, height: 201.5 },
+      { room: "Berging", qty: 1, width: 73, height: 201.5 },
+    ] },
+    { id: "villa", name: "Open bebouwing / villa", ic: "🏡", rows: [
+      { room: "Inkomhal", qty: 1, width: 93, height: 231.5 },
+      { room: "Leefruimte", qty: 2, width: 93, height: 231.5 },
+      { room: "Bureau", qty: 1, width: 88, height: 211.5 },
+      { room: "Slaapkamer", qty: 4, width: 88, height: 211.5 },
+      { room: "Badkamer", qty: 2, width: 83, height: 201.5 },
+      { room: "Toilet", qty: 2, width: 63, height: 201.5 },
+      { room: "Berging / wasplaats", qty: 2, width: 78, height: 201.5 },
+    ] },
+  ];
+
+  function renderBouw() {
+    var bw = state.bouw;
+    var kids = [
+      h("div", { class: "guide-hero" }, [
+        h("h2", {}, ["Bouwselector"]),
+        h("p", { class: "lead" }, ["Upload je bouwplan en bepaal in enkele stappen alle deuren voor je project. Perfect voor nieuwbouw of een volledige renovatie — je bestelt alles in één keer."]),
+      ]),
+    ];
+
+    // 1. plan upload
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["1. Upload je bouwplan (optioneel)"]),
+      h("p", { class: "gs-intro" }, ["Voeg je grondplan of deurenlijst toe als referentie. Foto of PDF — blijft privé bij je aanvraag."]),
+      h("label", { class: "upload-zone" }, [
+        h("input", { type: "file", accept: "image/*,application/pdf", multiple: "multiple", style: "display:none", onchange: onPlanUpload }, []),
+        h("div", { class: "uz-ic" }, ["📤"]),
+        h("div", {}, [h("strong", {}, ["Klik om te uploaden"]), h("br"), h("small", {}, ["of sleep je bestand hierheen"])]),
+      ]),
+      bw.plans.length ? h("div", { class: "plan-thumbs" }, bw.plans.map(function (p, i) {
+        return h("div", { class: "plan-thumb" }, [
+          p.type === "pdf" ? h("div", { class: "pt-pdf" }, ["📄 " + p.name]) : h("img", { src: p.url, alt: p.name }, []),
+          h("button", { class: "pt-del", onclick: function () { bw.plans.splice(i, 1); render(); } }, ["✕"]),
+        ]);
+      })) : null,
+    ]));
+
+    // 2. woningtype snelstart
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["2. Snelstart: kies je woningtype"]),
+      h("p", { class: "gs-intro" }, ["We vullen meteen een typische deurenlijst in. Pas alles daarna gerust aan."]),
+      h("div", { class: "hometype-grid" }, HOME_TYPES.map(function (ht) {
+        return h("button", { class: "hometype", onclick: function () { bw.rows = ht.rows.map(function (r) { return Object.assign({}, r); }); render(); } }, [
+          h("span", { class: "ht-ic" }, [ht.ic]),
+          h("strong", {}, [ht.name]),
+          h("small", {}, [ht.rows.reduce(function (n, r) { return n + r.qty; }, 0) + " deuren"]),
+        ]);
+      })),
+    ]));
+
+    // 3. deurenlijst
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["3. Je deuren, afmetingen & aantallen"]),
+      renderDoorRows(),
+      h("button", { class: "btn ghost", onclick: function () { bw.rows.push({ room: "Nieuwe ruimte", qty: 1, width: 83, height: 201.5 }); render(); } }, ["+ Deur toevoegen"]),
+    ]));
+
+    // 4. afwerking voor het project
+    kids.push(h("section", { class: "guide-sec" }, [
+      h("h3", {}, ["4. Afwerking voor het hele project"]),
+      h("p", { class: "gs-intro" }, ["Kies één stijl voor alle deuren. Individuele deuren pas je nadien nog aan in je winkelmandje."]),
+      renderBouwFinish(),
+    ]));
+
+    // 5. samenvatting + toevoegen
+    var totDoors = bw.rows.reduce(function (n, r) { return n + (+r.qty || 0); }, 0);
+    var estTotal = bouwEstimate();
+    kids.push(h("section", { class: "guide-sec bouw-foot" }, [
+      h("div", { class: "bouw-summary" }, [
+        h("div", {}, [h("strong", {}, [totDoors + " deuren"]), h("br"), h("small", {}, [bw.rows.length + " ruimtes"])]),
+        h("div", { class: "bs-total" }, [h("span", {}, ["Geschat totaal " + vatLabel()]), h("strong", {}, [euro(estTotal)])]),
+      ]),
+      h("div", { class: "btn-row" }, [
+        h("button", { class: "btn ghost", onclick: function () { goView("start"); } }, ["← Terug"]),
+        h("button", { class: "btn primary lg", onclick: addProjectToCart, disabled: totDoors ? null : "disabled" }, ["Alle " + totDoors + " deuren in winkelmandje →"]),
+      ]),
+      h("p", { class: "disclaimer" }, ["Richtprijs op basis van je keuzes. Upload en aantallen zijn indicatief; onze mensen controleren je plan en bevestigen de definitieve maten."]),
+    ]));
+
+    return card("guide", kids);
+  }
+
+  function renderDoorRows() {
+    var bw = state.bouw;
+    if (!bw.rows.length) return h("p", { class: "gs-intro" }, ["Kies hierboven een woningtype of voeg zelf deuren toe."]);
+    var rows = bw.rows.map(function (r, i) {
+      return h("div", { class: "door-row" }, [
+        h("input", { class: "dr-room", type: "text", value: r.room, oninput: function (e) { r.room = e.target.value; } }, []),
+        h("div", { class: "dr-field" }, [h("label", {}, ["Aantal"]),
+          h("div", { class: "mini-step" }, [
+            h("button", { onclick: function () { r.qty = Math.max(1, (+r.qty || 1) - 1); render(); } }, ["−"]),
+            h("span", {}, [String(r.qty)]),
+            h("button", { onclick: function () { r.qty = (+r.qty || 1) + 1; render(); } }, ["+"]),
+          ])]),
+        h("div", { class: "dr-field" }, [h("label", {}, ["Breedte"]),
+          h("select", { onchange: function (e) { r.width = +e.target.value; render(); } },
+            [63, 68, 73, 78, 83, 88, 93, 98, 103].map(function (w) { return h("option", { value: w, selected: r.width === w ? "selected" : null }, [w + " cm"]); }))]),
+        h("div", { class: "dr-field" }, [h("label", {}, ["Hoogte"]),
+          h("select", { onchange: function (e) { r.height = +e.target.value; render(); } },
+            [201.5, 211.5, 231.5].map(function (ht) { return h("option", { value: ht, selected: r.height === ht ? "selected" : null }, [String(ht).replace(".", ",") + " cm"]); }))]),
+        h("button", { class: "dr-del", onclick: function () { bw.rows.splice(i, 1); render(); } }, ["🗑"]),
+      ]);
+    });
+    return h("div", { class: "door-rows" }, [
+      h("div", { class: "dr-head" }, [h("span", {}, ["Ruimte"]), h("span", {}, ["Aantal"]), h("span", {}, ["Breedte"]), h("span", {}, ["Hoogte"]), h("span", {}, [])]),
+    ].concat(rows));
+  }
+
+  function renderBouwFinish() {
+    var bw = state.bouw;
+    // lijnkeuze
+    var lineBtns = h("div", { class: "bouw-lines" }, C.lines.map(function (l) {
+      return h("button", { class: "bl-btn" + (bw.lineId === l.id ? " sel" : ""), onclick: function () {
+        bw.lineId = l.id;
+        var line = lineById(l.id);
+        if (!hasFinishedGroup(line)) { bw.finishMode = "schilderklaar"; bw.finishId = "wit-teverven"; }
+        else { bw.finishMode = "afgewerkt"; bw.finishId = firstFinishedOf(line); }
+        render();
+      } }, [l.name]);
+    }));
+    // afwerkingstegels van de gekozen lijn
+    var line = lineById(bw.lineId);
+    var tiles = [];
+    line.finishGroups.forEach(function (gid) {
+      if (gid === "te-verven") return;
+      var grp = C.finishGroups.filter(function (g) { return g.id === gid; })[0];
+      if (!grp) return;
+      grp.finishes.filter(function (f) { return !line.finishFilter || line.finishFilter.indexOf(f.id) >= 0; }).forEach(function (f) {
+        tiles.push(h("button", { class: "tile" + (bw.finishMode === "afgewerkt" && bw.finishId === f.id ? " sel" : ""), onclick: function () { bw.finishMode = "afgewerkt"; bw.finishId = f.id; render(); } }, [
+          h("div", { class: "tile-door", html: tileDoorSVG({ finish: f }, "vlak", line) }, []),
+          h("span", { class: "tile-name" }, [f.name]),
+        ]));
+      });
+    });
+    if (line.finishGroups.indexOf("te-verven") >= 0) {
+      tiles.push(h("button", { class: "tile" + (bw.finishMode === "schilderklaar" ? " sel" : ""), onclick: function () { bw.finishMode = "schilderklaar"; bw.finishId = "wit-teverven"; render(); } }, [
+        h("div", { class: "tile-door", html: tileDoorSVG({ finish: { id: "wit-teverven", name: "wit", swatch: "#f4f2ec", tags: ["wit"] } }, "vlak", line) }, []),
+        h("span", { class: "tile-name" }, ["Schilderklaar wit"]),
+      ]));
+    }
+    return h("div", {}, [lineBtns, h("div", { class: "tile-grid" }, tiles)]);
+  }
+
+  function onPlanUpload(e) {
+    var files = Array.prototype.slice.call(e.target.files || []);
+    files.forEach(function (file) {
+      var isPdf = /pdf$/i.test(file.type) || /\.pdf$/i.test(file.name);
+      if (isPdf) { state.bouw.plans.push({ type: "pdf", name: file.name }); render(); return; }
+      var reader = new FileReader();
+      reader.onload = function (ev) { state.bouw.plans.push({ type: "img", name: file.name, url: ev.target.result }); render(); };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // schatting projecttotaal
+  function bouwEstimate() {
+    var bw = state.bouw, line = lineById(bw.lineId), total = 0;
+    var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor;
+    bw.rows.forEach(function (r) {
+      applyBouwToState(r);
+      total += calcUnit(line) * (+r.qty || 0);
+    });
+    Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
+    return total;
+  }
+  function applyBouwToState(r) {
+    var bw = state.bouw, line = lineById(bw.lineId);
+    setLineDefaults(line);
+    state.finishMode = bw.finishMode; state.finishId = bw.finishId; state.paintColor = bw.paintColor;
+    state.modelId = "vlak";
+    // dichtste geldige hoogte/breedte voor de lijn
+    state.height = line.customHeight ? null : nearest(line.heights, r.height);
+    state.customHeight = line.customHeight ? Math.max(line.customHeight.min, Math.min(line.customHeight.max, r.height * 10 > 300 ? r.height : r.height)) : null;
+    state.width = nearest(line.widths, r.width);
+    if (line.glassOptions) state.glassId = line.glassOptions[0].id;
+  }
+  function nearest(arr, v) { return arr.reduce(function (a, b) { return Math.abs(b - v) < Math.abs(a - v) ? b : a; }); }
+
+  function addProjectToCart() {
+    var bw = state.bouw, line = lineById(bw.lineId);
+    if (!bw.rows.length) return;
+    var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor; saved.qty = state.qty;
+    bw.rows.forEach(function (r) {
+      if (!(+r.qty)) return;
+      applyBouwToState(r);
+      var fg = activeFinish();
+      state.cart.push({
+        uid: uid(), label: (r.room ? r.room + " · " : "") + currentItemLabel(line, fg),
+        lineName: line.name, finishName: (fg ? fg.finish.name : "") + " · " + r.room,
+        cfg: snapshotConfig(), unitIncl: calcUnit(line), extrasIncl: 0, qty: +r.qty, thumb: bigDoorSVG(line, fg, true),
+      });
+    });
+    Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
+    state.editingUid = null;
+    toast(bw.rows.reduce(function (n, r) { return n + (+r.qty || 0); }, 0) + " deuren toegevoegd");
+    goView("cart");
   }
 
   /* ====================================================================== *
@@ -783,7 +1038,7 @@
             class: "tile" + (state.paintColor === pc.id ? " sel" : ""),
             onclick: function () { state.paintColor = pc.id; render(); },
           }, [
-            h("div", { class: "tile-door", html: tileDoorSVG({ finish: { id: "p-" + pc.id, name: pc.name, swatch: pc.swatch, tags: ["mat"] } }, state.modelId, line) }, []),
+            h("div", { class: "tile-door", html: tileDoorSVG({ finish: { id: "paint-" + pc.id, name: pc.name, swatch: pc.swatch, tags: ["mat"] } }, state.modelId, line) }, []),
             h("span", { class: "tile-name" }, [pc.name]),
           ]);
         })),
@@ -1208,8 +1463,15 @@
     var invisible = line.invisible;
     var dx = invisible ? 18 : 20, dy = invisible ? 14 : 16, dw = invisible ? 164 : 160, dh = invisible ? 312 : 308;
 
+    var T = window.TEXTURES || {};
+    var texKey = fg && fg.finish ? fg.finish.id : null;
+    var hasTex = !!(texKey && T[texKey] && !(m.glass && m.grid));
+
     var s = '<svg viewBox="0 0 200 400" class="big-svg" preserveAspectRatio="xMidYMid meet">';
     s += '<defs>';
+    if (hasTex) s += '<pattern id="ptd' + u + '" patternUnits="userSpaceOnUse" x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '"><image href="' + T[texKey] + '" x="0" y="0" width="' + dw + '" height="' + dh + '" preserveAspectRatio="xMidYMid slice"/></pattern>';
+    if (T.floor) s += '<pattern id="ptf' + u + '" patternUnits="userSpaceOnUse" x="0" y="332" width="200" height="68"><image href="' + T.floor + '" x="0" y="0" width="200" height="68" preserveAspectRatio="xMidYMid slice"/></pattern>';
+    if (T.wall) s += '<pattern id="ptw' + u + '" patternUnits="userSpaceOnUse" x="0" y="0" width="200" height="332"><image href="' + T.wall + '" x="0" y="0" width="200" height="332" preserveAspectRatio="xMidYMid slice"/></pattern>';
     s += '<linearGradient id="wall' + u + '" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#f1eee8"/><stop offset="1" stop-color="#e4e0d8"/></linearGradient>';
     s += '<linearGradient id="floor' + u + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6c7b0"/><stop offset="1" stop-color="#c6b499"/></linearGradient>';
     // deur-basisgradient (lichtval van linksboven)
@@ -1227,11 +1489,11 @@
     }
     s += '</defs>';
 
-    // kamer
-    s += '<rect x="0" y="0" width="200" height="332" fill="url(#wall' + u + ')"/>';
-    s += '<rect x="0" y="332" width="200" height="68" fill="url(#floor' + u + ')"/>';
-    // vloerplanken
-    for (var fp = 0; fp < 4; fp++) s += '<line x1="0" y1="' + (344 + fp * 15) + '" x2="200" y2="' + (344 + fp * 15) + '" stroke="rgba(120,90,60,0.12)" stroke-width="1"/>';
+    // kamer (foto-textuur indien beschikbaar)
+    s += '<rect x="0" y="0" width="200" height="332" fill="' + (T.wall ? "url(#ptw" + u + ")" : "url(#wall" + u + ")") + '"/>';
+    s += '<rect x="0" y="0" width="200" height="332" fill="rgba(255,255,255,0.10)"/>';
+    s += '<rect x="0" y="332" width="200" height="68" fill="' + (T.floor ? "url(#ptf" + u + ")" : "url(#floor" + u + ")") + '"/>';
+    if (!T.floor) for (var fp = 0; fp < 4; fp++) s += '<line x1="0" y1="' + (344 + fp * 15) + '" x2="200" y2="' + (344 + fp * 15) + '" stroke="rgba(120,90,60,0.12)" stroke-width="1"/>';
     s += '<rect x="0" y="328" width="200" height="7" fill="#f5f2ec"/>'; // plint
     // vloerreflectie van de deur
     s += '<rect x="' + dx + '" y="332" width="' + dw + '" height="26" fill="' + base + '" opacity="0.16"/>';
@@ -1247,18 +1509,20 @@
       s += '<rect x="' + (dx - 3) + '" y="' + (dy - 2) + '" width="' + (dw + 6) + '" height="' + (dh + 4) + '" rx="1.5" fill="rgba(0,0,0,.06)"/>';
     }
 
-    // deurblad basis
-    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#door' + u + ')"/>';
-    // materiaal-textuur overlay
-    if (mat === "wood" || mat === "marble" || mat === "concrete") {
-      var op = mat === "wood" ? 0.5 : mat === "marble" ? 0.75 : 0.5;
-      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" filter="url(#tex' + u + ')" opacity="' + op + '"/>';
+    // deurblad basis: foto-textuur indien beschikbaar, anders gegenereerd materiaal
+    if (hasTex) {
+      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#ptd' + u + ')"/>';
+    } else {
+      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#door' + u + ')"/>';
+      if (mat === "wood" || mat === "marble" || mat === "concrete") {
+        var op = mat === "wood" ? 0.5 : mat === "marble" ? 0.75 : 0.5;
+        s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" filter="url(#tex' + u + ')" opacity="' + op + '"/>';
+      }
     }
-    if (mat === "wood") {
-      // enkele langsnerven/planknaad
+    if (!hasTex && mat === "wood") {
       for (var wp = 1; wp < 3; wp++) s += '<line x1="' + (dx + wp * dw / 3) + '" y1="' + dy + '" x2="' + (dx + wp * dw / 3) + '" y2="' + (dy + dh) + '" stroke="rgba(60,40,20,0.10)" stroke-width="1"/>';
     }
-    if (mat === "marble") {
+    if (!hasTex && mat === "marble") {
       s += '<path d="M' + (dx + 20) + ',' + (dy + 40) + ' q40,30 90,10 t60,40" stroke="rgba(90,95,105,0.35)" stroke-width="1.4" fill="none"/>';
       s += '<path d="M' + (dx + 10) + ',' + (dy + 160) + ' q60,-20 110,30 t40,20" stroke="rgba(90,95,105,0.28)" stroke-width="1.2" fill="none"/>';
     }
@@ -1342,12 +1606,20 @@
     if (mat === "wood") s += '<filter id="x' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.16 0.012" numOctaves="4" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/></filter>';
     else if (mat === "marble") s += '<filter id="x' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.04" numOctaves="5" seed="9" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.25 0 0 0 0 0.27 0 0 0 0 0.3 0 0 0 0.9 -0.35"/></filter>';
     else if (mat === "concrete") s += '<filter id="x' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0"/></filter>';
+    var T = window.TEXTURES || {};
+    var texKey = fg && fg.finish ? fg.finish.id : null;
+    var hasTex = !!(texKey && T[texKey] && !(m.glass && m.grid));
+    if (hasTex) s += '<pattern id="pt' + u + '" patternUnits="userSpaceOnUse" x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '"><image href="' + T[texKey] + '" x="0" y="0" width="' + dw + '" height="' + dh + '" preserveAspectRatio="xMidYMid slice"/></pattern>';
     s += '</defs>';
     s += '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="6" fill="#efece6"/>';
-    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" fill="url(#d' + u + ')"/>';
-    if (mat === "wood" || mat === "marble" || mat === "concrete") {
-      var op = mat === "marble" ? 0.75 : 0.5;
-      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" filter="url(#x' + u + ')" opacity="' + op + '"/>';
+    if (hasTex) {
+      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" fill="url(#pt' + u + ')"/>';
+    } else {
+      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" fill="url(#d' + u + ')"/>';
+      if (mat === "wood" || mat === "marble" || mat === "concrete") {
+        var op = mat === "marble" ? 0.75 : 0.5;
+        s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" filter="url(#x' + u + ')" opacity="' + op + '"/>';
+      }
     }
     s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" fill="url(#sh' + u + ')"/>';
     // model

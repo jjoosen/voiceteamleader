@@ -54,6 +54,7 @@ $asset_v = @filemtime(__DIR__ . '/assets/app.js') ?: time();
     </div>
   </div>
 
+  <script src="assets/textures.js?v=<?php echo $asset_v; ?>"></script>
   <script src="assets/catalog.js?v=<?php echo $asset_v; ?>"></script>
   <script src="assets/app.js?v=<?php echo $asset_v; ?>"></script>
 </body>
