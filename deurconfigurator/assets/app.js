@@ -33,6 +33,11 @@
   }
   function isWide(width) { return width >= 88; }
   function paintColorById(id) { return C.paintColors.filter(function (p) { return p.id === id; })[0]; }
+  function finById(id) { // vriendelijke afwerkingsnaam
+    var f = finishById(id); if (f) return f.finish.name;
+    if (String(id).indexOf("paint-") === 0) { var pc = paintColorById(id.slice(6)); return pc ? pc.name : id; }
+    return id;
+  }
 
   // De weer te geven afwerking, rekening houdend met de schilder-modus
   function activeFinish() {
@@ -556,6 +561,27 @@
     { k: /inkom|hal|nacht/i, tip: "Hal/inkom: een strakke, neutrale afwerking oogt het rustigst.", ic: "🚪" },
     { k: /dressing|kleedkamer/i, tip: "Dressing: laat gerust aansluiten bij de slaapkamer voor een rustig geheel.", ic: "👕" },
   ];
+  // aanbeveling per ruimte: deurtype, afwerking, slot + reden
+  function recommendForRoom(r) {
+    var n = r.room || "", h = r.height || 201.5;
+    var rec = { lineId: "invisible-flat", finishMode: "afgewerkt", finishId: "soft-mat-white", paintColor: "ral9010", lockId: "baardsleutel", reason: "Strak en tijdloos." };
+    if (/badkamer|bad/i.test(n)) { rec.finishId = "soft-mat-white"; rec.lockId = "wc"; rec.reason = "Vochtongevoelige afwerking + vrij/bezet-slot voor de badkamer."; }
+    else if (/toilet|wc/i.test(n)) { rec.finishId = "soft-mat-white"; rec.lockId = "wc"; rec.reason = "Compact met een handig vrij/bezet-slot."; }
+    else if (/slaapkamer|bedroom|master/i.test(n)) { rec.finishId = "nature-oak"; rec.lockId = "cilinder"; rec.reason = "Warme houtlook en een cilinderslot voor privacy en rust."; }
+    else if (/bureau|office/i.test(n)) { rec.finishId = "nature-oak"; rec.lockId = "cilinder"; rec.reason = "Dichte, geluidsdempende deur — ideaal om te werken."; }
+    else if (/berging|techniek|wasplaats|garage/i.test(n)) { rec.finishMode = "schilderklaar"; rec.finishId = "wit-teverven"; rec.lineId = "te-verven"; rec.reason = "Functionele ruimte — hier bespaar je met een schilderklare deur."; }
+    else if (/leefruimte|living|woon|keuken|eet/i.test(n)) { rec.finishId = "nature-oak"; rec.reason = "Zichtlocatie — een mooie houtlook maakt indruk."; }
+    else if (/dressing|kleedkamer/i.test(n)) { rec.finishId = "nature-oak"; rec.reason = "Sluit mooi aan bij de slaapkamer."; }
+    else if (/inkom|hal|nacht/i.test(n)) { rec.finishId = "soft-mat-white"; rec.reason = "Neutraal en rustig voor de circulatie."; }
+    else if (/polyvalente|zolder/i.test(n)) { rec.finishMode = "schilderklaar"; rec.finishId = "wit-teverven"; rec.lineId = "te-verven"; rec.reason = "Polyvalent — schilderklaar houdt het budget laag."; }
+    // hoge deuren → passende lijn (Loft tot 231,5 cm mét houtafwerkingen; Endless boven 231,5)
+    if (rec.lineId !== "te-verven") {
+      if (h > 231.5) { rec.lineId = "endless-loft"; rec.reason += " Voor deze hoogte maken we een plafondhoge deur op maat."; }
+      else if (h >= 231) { rec.lineId = "loft"; rec.reason += " Voor deze hoogte gebruiken we een hoge deur (tot 231,5 cm)."; }
+    }
+    return rec;
+  }
+
   function roomTip(name) {
     for (var i = 0; i < ROOM_TIPS.length; i++) if (ROOM_TIPS[i].k.test(name || "")) return ROOM_TIPS[i];
     return { tip: "Kies de afwerking die past bij deze ruimte.", ic: "🚪" };
@@ -571,14 +597,14 @@
       ]),
     ];
 
-    // 1. plan upload
+    // 1. plan upload + herkenning
     kids.push(h("section", { class: "guide-sec" }, [
-      h("h3", {}, ["1. Upload je bouwplan (optioneel)"]),
-      h("p", { class: "gs-intro" }, ["Voeg je grondplan of deurenlijst toe als referentie. Foto of PDF — blijft privé bij je aanvraag."]),
+      h("h3", {}, ["1. Upload je bouwplan"]),
+      h("p", { class: "gs-intro" }, ["Voeg je grondplan toe (foto of PDF). We halen er automatisch de ruimtes en deuren uit — daarna controleer en verfijn je alles."]),
       h("label", { class: "upload-zone" }, [
         h("input", { type: "file", accept: "image/*,application/pdf", multiple: "multiple", style: "display:none", onchange: onPlanUpload }, []),
         h("div", { class: "uz-ic" }, ["📤"]),
-        h("div", {}, [h("strong", {}, ["Klik om te uploaden"]), h("br"), h("small", {}, ["of sleep je bestand hierheen"])]),
+        h("div", {}, [h("strong", {}, ["Klik om je plan te uploaden"]), h("br"), h("small", {}, ["JPG, PNG of PDF — blijft privé bij je aanvraag"])]),
       ]),
       bw.plans.length ? h("div", { class: "plan-thumbs" }, bw.plans.map(function (p, i) {
         return h("div", { class: "plan-thumb" }, [
@@ -586,6 +612,13 @@
           h("button", { class: "pt-del", onclick: function () { bw.plans.splice(i, 1); render(); } }, ["✕"]),
         ]);
       })) : null,
+      bw.plans.length ? h("div", { class: "plan-recognize" }, [
+        bw.analyzing
+          ? h("div", { class: "pr-busy" }, [h("span", { class: "pr-spin" }, []), "Plan analyseren…"])
+          : h("button", { class: "btn primary", onclick: analyzePlan }, ["🔎 Deuren uit dit plan herkennen"]),
+        bw.recognized ? h("span", { class: "pr-done" }, ["✓ " + bw.recognized + " deuren herkend — controleer hieronder"]) : null,
+        h("p", { class: "acc-note" }, ["In de webshop-versie leest onze AI je plan automatisch uit. In deze testversie tonen we een voorbeeldresultaat dat je zelf aanpast."]),
+      ]) : null,
     ]));
 
     // 2. woningtype snelstart
@@ -651,9 +684,39 @@
   function startWalk() {
     var bw = state.bouw;
     bw.rows.forEach(function (r) {
-      if (!r.lineId) { r.lineId = bw.lineId; r.finishMode = bw.finishMode; r.finishId = bw.finishId; r.paintColor = bw.paintColor; }
+      var rec = recommendForRoom(r);
+      r.advised = rec;
+      if (!r.lineId) { // neem advies over als nog niets gekozen
+        r.lineId = rec.lineId; r.finishMode = rec.finishMode; r.finishId = rec.finishId;
+        r.paintColor = rec.paintColor; r.lockId = rec.lockId;
+        ensureValidFinish(r);
+      }
     });
     bw.walk = true; bw.idx = 0; render();
+  }
+  function ensureValidFinish(r) {
+    var line = lineById(r.lineId);
+    if (r.finishMode === "afgewerkt") {
+      var grp = line.finishGroups.filter(function (g) { return g !== "te-verven"; });
+      var ok = false;
+      grp.forEach(function (gid) {
+        var g = C.finishGroups.filter(function (x) { return x.id === gid; })[0];
+        if (g && g.finishes.some(function (f) { return f.id === r.finishId && (!line.finishFilter || line.finishFilter.indexOf(f.id) >= 0); })) ok = true;
+      });
+      if (!ok) {
+        if (hasFinishedGroup(line)) r.finishId = firstFinishedOf(line);
+        else { r.finishMode = "schilderklaar"; r.finishId = "wit-teverven"; }
+      }
+    }
+    if (r.finishMode !== "afgewerkt" && line.finishGroups.indexOf("te-verven") < 0) {
+      r.finishMode = "afgewerkt"; r.finishId = firstFinishedOf(line);
+    }
+  }
+  function applyAdvice(r) {
+    var rec = r.advised || recommendForRoom(r);
+    r.lineId = rec.lineId; r.finishMode = rec.finishMode; r.finishId = rec.finishId;
+    r.paintColor = rec.paintColor; r.lockId = rec.lockId;
+    ensureValidFinish(r); render();
   }
   function applyRowToState(r) {
     var bw = state.bouw;
@@ -667,15 +730,22 @@
     state.customHeight = line.customHeight ? Math.max(line.customHeight.min, Math.min(line.customHeight.max, r.height)) : null;
     state.width = nearest(line.widths, r.width);
     if (line.glassOptions) state.glassId = line.glassOptions[0].id;
+    if (r.lockId) state.lockId = r.lockId;
+    if (r.lockColor) state.lockColor = r.lockColor;
+    if (r.handleId) state.handleId = r.handleId;
+    if (r.extras) state.extras = r.extras;
     return line;
   }
 
   function renderRoomWalk() {
     var bw = state.bouw, idx = bw.idx, row = bw.rows[idx], total = bw.rows.length;
+    if (!row.advised) row.advised = recommendForRoom(row);
     var line = applyRowToState(row);
     var fg = activeFinish();
     var tip = roomTip(row.room);
     var unit = calcUnit(line);
+    var rec = row.advised;
+    var onAdvice = row.lineId === rec.lineId && row.finishId === rec.finishId && (row.lockId || "baardsleutel") === rec.lockId;
 
     var kids = [
       // voortgang
@@ -689,6 +759,15 @@
       h("div", { class: "walk-head" }, [
         h("input", { class: "walk-room", type: "text", value: row.room, oninput: function (e) { row.room = e.target.value; } }, []),
         h("div", { class: "walk-tip" }, [h("span", { class: "wt-ic" }, [tip.ic]), tip.tip]),
+        h("div", { class: "walk-advice" }, [
+          h("span", { class: "wa-star" }, ["★"]),
+          h("div", {}, [
+            h("strong", {}, ["Ons advies: " + ((LINE_INFO[rec.lineId] || {}).plain || "") + " · " + (finById(rec.finishId) || rec.finishId)]),
+            h("span", {}, [" — " + rec.reason]),
+          ]),
+          onAdvice ? h("span", { class: "wa-ok" }, ["✓ toegepast"])
+                   : h("button", { class: "btn ghost sm", onclick: function () { applyAdvice(row); } }, ["Gebruik ons advies"]),
+        ]),
       ]),
     ];
 
@@ -740,7 +819,27 @@
           h("select", { onchange: function (e) { row.height = +e.target.value; render(); } },
             (line.heights || [201.5, 211.5, 231.5]).map(function (ht) { return h("option", { value: ht, selected: row.height === ht ? "selected" : null }, [String(ht).replace(".", ",") + " cm"]); }))]),
       ]),
-      h("button", { class: "link-btn", onclick: function () { applyToRest(idx); toast("Toegepast op volgende ruimtes"); } }, ["↓ Deze stijl & kleur op alle volgende ruimtes toepassen"]),
+      h("button", { class: "link-btn", onclick: function () { applyToRest(idx); toast("Toegepast op volgende ruimtes"); } }, ["↓ Deze stijl, kleur & beslag op alle volgende ruimtes toepassen"]),
+    ]));
+
+    // slot & kruk per ruimte (nadien aanpasbaar in het winkelmandje)
+    controls.push(h("div", { class: "walk-block" }, [
+      h("h4", {}, ["4. Slot & kruk voor deze ruimte"]),
+      h("div", { class: "acc-row" }, [
+        h("span", { class: "acc-lbl" }, ["Slot"]),
+        h("div", { class: "acc-opts" }, C.locks.map(function (l) {
+          return h("button", { class: "acc-pill" + ((row.lockId || "baardsleutel") === l.id ? " sel" : ""), onclick: function () { row.lockId = l.id; render(); } },
+            [l.name.replace("Magnetisch slot met ", "").replace("-/vrij-bezet slot", "-slot") + (l.extra ? " +" + euro(l.extra) : "")]);
+        })),
+      ]),
+      line.handleType === "greep" ? null : h("div", { class: "acc-row" }, [
+        h("span", { class: "acc-lbl" }, ["Kruk"]),
+        h("div", { class: "acc-opts" }, C.handles.filter(function (hd) { return hd.type === "kruk"; }).map(function (hd) {
+          return h("button", { class: "acc-pill" + ((row.handleId || "milano-inox") === hd.id ? " sel" : ""), onclick: function () { row.handleId = hd.id; render(); } },
+            [hd.name + (hd.price ? " +" + euro(hd.price) : "")]);
+        })),
+      ]),
+      h("p", { class: "acc-note" }, ["Extra toebehoren (voegband, montageschuim …) en fijne aanpassingen kies je per deur in het winkelmandje — alles blijft nadien wijzigbaar."]),
     ]));
 
     var body = h("div", { class: "walk-layout" }, [
@@ -828,6 +927,7 @@
     for (var i = idx + 1; i < bw.rows.length; i++) {
       bw.rows[i].lineId = src.lineId; bw.rows[i].finishMode = src.finishMode;
       bw.rows[i].finishId = src.finishId; bw.rows[i].paintColor = src.paintColor;
+      bw.rows[i].lockId = src.lockId; bw.rows[i].handleId = src.handleId;
     }
     render();
   }
@@ -902,6 +1002,34 @@
       reader.onload = function (ev) { state.bouw.plans.push({ type: "img", name: file.name, url: ev.target.result }); render(); };
       reader.readAsDataURL(file);
     });
+    state.bouw.recognized = 0;
+  }
+
+  // plan → deurenlijst. Probeert server-side AI-herkenning; anders demo-resultaat.
+  function analyzePlan() {
+    var bw = state.bouw;
+    bw.analyzing = true; render();
+    var img = (bw.plans.filter(function (p) { return p.type === "img"; })[0] || {}).url || null;
+    var demo = function () {
+      // representatief resultaat (villa-grondplan) — in de webshop leest de AI dit uit het plan
+      bw.rows = HOME_TYPES.filter(function (t) { return t.id === "voorbeeldplan"; })[0].rows.map(function (r) { return Object.assign({}, r); });
+      bw.recognized = bw.rows.reduce(function (n, r) { return n + r.qty; }, 0);
+      bw.analyzing = false; toast(bw.recognized + " deuren herkend uit je plan"); render();
+    };
+    // server-side endpoint (Combell) — valt terug op demo in de testversie
+    var ctrl = setTimeout(demo, 1600);
+    if (img) {
+      fetch("analyze-plan.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ image: img }) })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res && res.rows && res.rows.length) {
+            clearTimeout(ctrl);
+            bw.rows = res.rows; bw.recognized = res.rows.reduce(function (n, r) { return n + (r.qty || 1); }, 0);
+            bw.analyzing = false; toast(bw.recognized + " deuren herkend uit je plan"); render();
+          }
+        })
+        .catch(function () {/* demo-timer neemt over */});
+    }
   }
 
   // schatting projecttotaal
@@ -1226,9 +1354,9 @@
 
     // 1) duidelijke keuze: hoe wil je de deur afgewerkt?
     var modeCards = {
-      afgewerkt: { ic: "✨", t: "Kant-en-klaar afgewerkt", d: "Volledig afgewerkt geleverd — je hoeft niet te schilderen. Hout, mat, beton, staal-glas …" },
-      schilderklaar: { ic: "🖌️", t: "Schilderklaar (ik schilder zelf)", d: "Voordeligst. Wit voorgelakt; jij schildert in je eigen kleur." },
-      geschilderd: { ic: "🎨", t: "In mijn kleur geschilderd", d: "Wij leveren de deur kant-en-klaar geschilderd in de kleur die jij kiest. (+ " + euro(C.paintService.pricePerDoor) + "/deur)" },
+      afgewerkt: { ic: "✨", t: "Kant-en-klaar afgewerkt", d: "Nooit schilderen. De afwerking (hout, mat, beton, staal-glas) zit er al op en is klaar om te plaatsen." },
+      schilderklaar: { ic: "🖌️", t: "Schilderklaar — ik schilder zelf", d: "Voordeligst. Je krijgt een wit voorgelakte deur (grondlaag) en schildert ze zelf af in je kleur." },
+      geschilderd: { ic: "🎨", t: "Wij schilderen op kleur", d: "Wij lakken de deur in jouw kleur en leveren ze kant-en-klaar — meteen te plaatsen. (+ " + euro(C.paintService.pricePerDoor) + "/deur)" },
     };
     kids.push(h("div", { class: "finish-mode-grid" }, modes.map(function (mid) {
       var mc = modeCards[mid];

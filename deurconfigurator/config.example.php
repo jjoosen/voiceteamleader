@@ -15,3 +15,7 @@ define('LEAD_FROM_EMAIL', 'noreply@jouwdomein.be');
 // Optioneel: aanvragen ook doorsturen naar Teamleader (hergebruik VoiceDeal-koppeling).
 // Zet op true en werk lead.php af als je dit wil activeren.
 define('TEAMLEADER_FORWARD', false);
+
+// Anthropic API-sleutel voor automatische plan-herkenning (analyze-plan.php).
+// Zonder sleutel valt de bouwselector terug op een voorbeeldresultaat.
+define('ANTHROPIC_API_KEY', '');
