@@ -32,15 +32,40 @@
     return C.lines.filter(function (l) { return l.id === id; })[0];
   }
   function isWide(width) { return width >= 88; }
+  function paintColorById(id) { return C.paintColors.filter(function (p) { return p.id === id; })[0]; }
+
+  // De weer te geven afwerking, rekening houdend met de schilder-modus
+  function activeFinish() {
+    if (state.finishMode === "geschilderd") {
+      var pc = paintColorById(state.paintColor) || C.paintColors[0];
+      return { finish: { id: "paint-" + pc.id, name: "Geschilderd: " + pc.name, swatch: pc.swatch, tags: ["mat"] }, group: { id: "te-verven", name: "Geschilderd op kleur" }, painted: true };
+    }
+    if (state.finishMode === "schilderklaar") {
+      return { finish: { id: "wit-teverven", name: "Schilderklaar wit (zelf te schilderen)", swatch: "#f4f2ec", tags: ["wit"] }, group: { id: "te-verven", name: "Schilderklaar" }, paintable: true };
+    }
+    return finishById(state.finishId) || finishById("soft-mat-white");
+  }
+
+  // materiaaltype voor realistische rendering, afgeleid van tags/swatch
+  function materialOf(fObj) {
+    var f = fObj.finish;
+    var t = f.tags || [];
+    if (t.indexOf("marmer") >= 0) return "marble";
+    if (t.indexOf("beton") >= 0 || t.indexOf("leisteen") >= 0) return "concrete";
+    if (t.indexOf("hout") >= 0 || t.indexOf("eik") >= 0 || t.indexOf("walnoot") >= 0 || (f.swatch || "").indexOf("gradient") >= 0) return "wood";
+    return "matte";
+  }
 
   /* ---- state ------------------------------------------------------------ */
   var state = {
-    view: "config",    // config | guide | cart | checkout | done
+    view: "gallery",   // gallery | config | guide | cart | checkout | done
     step: 0,
     audience: "gezin", // gezin (particulier) | aannemer (vakman)
     advice: {},        // antwoorden adviesmotor
     lineId: null,
     finishId: null,
+    finishMode: "afgewerkt", // afgewerkt | schilderklaar | geschilderd
+    paintColor: "ral9010",
     coreId: null,
     modelId: null,
     height: null,
@@ -247,8 +272,11 @@
     });
     return t;
   }
+  function calcPaint() {
+    return state.finishMode === "geschilderd" ? (C.paintService.pricePerDoor || 0) : 0;
+  }
   function calcUnit(line) {
-    return calcLeaf(line) + calcFrame(line) + calcHandle() + calcLock();
+    return calcLeaf(line) + calcFrame(line) + calcHandle() + calcLock() + calcPaint();
   }
   function calcTotal(line) {
     return calcUnit(line) * state.qty + calcExtras();
@@ -263,7 +291,10 @@
     app.innerHTML = "";
     var stepperEl = $("#stepper");
 
-    if (state.view === "guide") {
+    if (state.view === "gallery") {
+      app.appendChild(renderGallery());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "guide") {
       app.appendChild(renderGuide());
       if (stepperEl) stepperEl.style.display = "none";
     } else if (state.view === "cart") {
@@ -306,6 +337,7 @@
     var count = state.cart.reduce(function (n, it) { return n + it.qty; }, 0);
     el.innerHTML = "";
     var items = [
+      { id: "gallery", label: "Deuren", ic: "🏠" },
       { id: "config", label: "Configureren", ic: "🚪" },
       { id: "guide", label: "Keuzehulp", ic: "💡" },
     ];
@@ -356,7 +388,7 @@
   // live preview-paneel dat naast de stappen blijft staan
   function renderPreviewPanel() {
     var line = lineById(state.lineId);
-    var fg = finishById(state.finishId);
+    var fg = activeFinish();
     return h("div", { class: "preview-card" }, [
       h("div", { class: "preview-door" }, [bigDoor(line, fg)]),
       h("div", { class: "preview-info" }, [
@@ -408,6 +440,94 @@
   }
   function backBtn() {
     return h("button", { class: "btn ghost", onclick: function () { state.step = Math.max(0, state.step - 1); render(); } }, ["← Terug"]);
+  }
+
+  /* ====================================================================== *
+   *  GALERIJ — realistische voorbeelden als startpunt voor particulieren
+   * ====================================================================== */
+  // showcase-deuren: [lijn, afwerking, model, modus, titel, sfeer]
+  var SHOWCASE = [
+    { line: "invisible-flat", finish: "nature-oak", model: "vlak", mode: "afgewerkt", title: "Nature Oak", tag: "Warm eiken" },
+    { line: "invisible-flat", finish: "walnut", model: "vlak", mode: "afgewerkt", title: "Walnut", tag: "Donker & chic" },
+    { line: "invisible-flat", finish: "soft-mat-white", model: "vlak", mode: "afgewerkt", title: "Soft Mat White", tag: "Tijdloos mat wit" },
+    { line: "invisible-flat", finish: "black-mat", model: "vlak", mode: "afgewerkt", title: "Black Mat", tag: "Strak zwart" },
+    { line: "invisible-flat", finish: "soft-mat-sage", model: "vlak", mode: "afgewerkt", title: "Soft Mat Sage", tag: "Zacht groen" },
+    { line: "invisible-flat", finish: "beton-silver", model: "vlak", mode: "afgewerkt", title: "Beton Silver", tag: "Industrieel" },
+    { line: "invisible-flat", finish: "candela-marble", model: "vlak", mode: "afgewerkt", title: "Candela Marble", tag: "Marmerlook" },
+    { line: "invisible-flat", finish: "wit-teverven", model: "vlak", mode: "geschilderd", paint: "navy", title: "Op kleur geschilderd", tag: "Jouw RAL-kleur" },
+    { line: "steel-look", finish: "black-mat", model: "4r", mode: "afgewerkt", title: "Steel Look 4R", tag: "Staal + glas" },
+    { line: "steel-look", finish: "black-mat", model: "1r", mode: "afgewerkt", title: "Steel Look 1R", tag: "Staal + glas" },
+    { line: "loft", finish: "nature-oak", model: "vlak", mode: "afgewerkt", title: "Loft Nature Oak", tag: "Hoog tot 231 cm" },
+    { line: "te-verven", finish: "wit-teverven", model: "vlak", mode: "schilderklaar", title: "Schilderklaar wit", tag: "Zelf schilderen" },
+  ];
+
+  // pas een showcase toe op de state (zonder render) → voor rendering én overgang
+  function applyShowcase(sc) {
+    var line = lineById(sc.line);
+    setLineDefaults(line);
+    state.finishMode = sc.mode || "afgewerkt";
+    if (sc.mode === "geschilderd") { state.paintColor = sc.paint || "ral9010"; state.finishId = "wit-teverven"; }
+    else if (sc.mode === "schilderklaar") { state.finishId = "wit-teverven"; }
+    else { state.finishId = sc.finish; }
+    if (sc.model) state.modelId = sc.model;
+    if (line.glassOptions && !state.glassId) state.glassId = line.glassOptions[0].id;
+  }
+
+  function renderGallery() {
+    // bewaar volledige config, render elke showcase, herstel
+    var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor; saved.lineId = state.lineId; saved.qty = state.qty;
+
+    var cards = SHOWCASE.map(function (sc) {
+      applyShowcase(sc);
+      var line = lineById(sc.line);
+      var svg = bigDoorSVG(line, activeFinish(), false);
+      var price = calcUnit(line);
+      return h("button", { class: "gal-card", onclick: (function (item) { return function () { openShowcase(item); }; })(sc) }, [
+        h("div", { class: "gal-door", html: svg }, []),
+        h("div", { class: "gal-info" }, [
+          h("div", { class: "gal-title" }, [sc.title]),
+          h("div", { class: "gal-tag" }, [sc.tag]),
+          h("div", { class: "gal-meta" }, [
+            h("span", { class: "gal-line" }, [line.name]),
+            h("span", { class: "gal-price" }, ["vanaf " + euro(price)]),
+          ]),
+        ]),
+        h("div", { class: "gal-cta" }, ["Bekijk & pas aan →"]),
+      ]);
+    });
+
+    // herstel live state
+    Object.keys(saved).forEach(function (k) { state[k] = k === "extras" ? saved[k] : saved[k]; });
+
+    return h("div", {}, [
+      card("gal-hero", [
+        h("div", { class: "hero-badge" }, ["Binnendeuren op maat"]),
+        h("h1", {}, ["Kies je binnendeur — zie meteen hoe ze eruitziet"]),
+        h("p", { class: "lead" }, [
+          "Blader door realistische voorbeelden. Klik op een deur die je aanspreekt om ze aan te passen " +
+          "(kleur, maat, beslag) met een live voorbeeld. Weet je nog niet wat je wil? Onze keuzehulp en het gratis advies helpen je verder.",
+        ]),
+        h("div", { class: "hero-actions" }, [
+          h("button", { class: "btn primary lg", onclick: function () { state.step = 1; goView("config"); } }, ["Help me kiezen (advies) →"]),
+          h("button", { class: "btn ghost lg", onclick: function () { goView("guide"); } }, ["💡 Naar de keuzehulp"]),
+        ]),
+      ]),
+      h("h2", { class: "gal-heading" }, ["Populaire deuren"]),
+      h("div", { class: "gallery-grid" }, cards),
+      h("div", { class: "gal-foot" }, [
+        h("p", {}, ["Meer dan 40 afwerkingen mogelijk — van schilderklaar tot echte houtstructuur, staal-glas en plafondhoog tot 300 cm."]),
+        h("button", { class: "btn primary", onclick: function () { state.step = 0; goView("config"); } }, ["Zelf samenstellen →"]),
+      ]),
+    ]);
+  }
+
+  function openShowcase(sc) {
+    applyShowcase(sc);
+    state.editingUid = null;
+    state.qty = 1;
+    state.view = "config";
+    state.step = 3; // spring naar afwerking zodat men meteen kan aanpassen
+    render();
   }
 
   /* ---- STAP 0 : intro --------------------------------------------------- */
@@ -496,19 +616,26 @@
     kids.push(h("div", { class: "line-grid" }, order.map(function (line) {
       var isBest = best && line.id === best.id;
       var priceFrom = lowestFrom(line);
+      var REP = { "te-verven": "wit-teverven", "invisible-flat": "nature-oak", "steel-look": "black-mat", "loft": "nature-oak", "endless-loft": "wit-teverven" };
+      var repFinishId = REP[line.id] || firstFinishedOf(line) || "wit-teverven";
+      var repFinish = finishById(repFinishId) || { finish: { id: "x", name: "", swatch: "#eee", tags: [] } };
+      var repModel = line.id === "steel-look" ? "1r" : line.models[0];
       return h("div", {
-        class: "line-card" + (state.lineId === line.id ? " sel" : "") + (isBest ? " best" : ""),
+        class: "line-card img" + (state.lineId === line.id ? " sel" : "") + (isBest ? " best" : ""),
         onclick: function () { selectLine(line.id); },
       }, [
         isBest ? h("div", { class: "ribbon" }, ["Aanbevolen"]) : null,
-        h("div", { class: "line-badge" }, [line.badge]),
-        h("h3", {}, [line.name]),
-        h("p", {}, [line.tagline]),
-        h("div", { class: "line-meta" }, [
-          h("span", {}, ["vanaf " + euro(priceFrom)]),
-          line.invisible ? h("span", { class: "tag" }, ["verdoken"]) : null,
-          line.attrs.maxHeight >= 300 ? h("span", { class: "tag" }, ["tot 300cm"]) :
-            line.attrs.maxHeight >= 231 ? h("span", { class: "tag" }, ["tot 231cm"]) : null,
+        h("div", { class: "lc-door", html: tileDoorSVG(repFinish, repModel, line) }, []),
+        h("div", { class: "lc-body" }, [
+          h("div", { class: "line-badge" }, [line.badge]),
+          h("h3", {}, [line.name]),
+          h("p", {}, [line.tagline]),
+          h("div", { class: "line-meta" }, [
+            h("span", {}, ["vanaf " + euro(priceFrom)]),
+            line.invisible ? h("span", { class: "tag" }, ["verdoken"]) : null,
+            line.attrs.maxHeight >= 300 ? h("span", { class: "tag" }, ["tot 300cm"]) :
+              line.attrs.maxHeight >= 231 ? h("span", { class: "tag" }, ["tot 231cm"]) : null,
+          ]),
         ]),
       ]);
     })));
@@ -547,12 +674,34 @@
     return null;
   }
 
-  function selectLine(id) {
-    if (state.lineId === id) return;
-    var line = lineById(id);
-    state.lineId = id;
-    // reset afhankelijke keuzes naar zinnige defaults
-    state.finishId = firstFinishOf(line);
+  // welke schilder-modi ondersteunt deze lijn?
+  function lineModes(line) {
+    var m = [];
+    if (hasFinishedGroup(line)) m.push("afgewerkt");
+    if (line.finishGroups.indexOf("te-verven") >= 0) { m.push("schilderklaar"); m.push("geschilderd"); }
+    return m;
+  }
+  function hasFinishedGroup(line) {
+    return line.finishGroups.some(function (g) { return g !== "te-verven"; });
+  }
+  function firstFinishedOf(line) {
+    var groups = line.finishGroups.filter(function (g) { return g !== "te-verven"; });
+    for (var i = 0; i < groups.length; i++) {
+      var grp = C.finishGroups.filter(function (g) { return g.id === groups[i]; })[0];
+      if (!grp) continue;
+      for (var j = 0; j < grp.finishes.length; j++) {
+        var fid = grp.finishes[j].id;
+        if (!line.finishFilter || line.finishFilter.indexOf(fid) >= 0) return fid;
+      }
+    }
+    return null;
+  }
+
+  function setLineDefaults(line) {
+    state.lineId = line.id;
+    var modes = lineModes(line);
+    state.finishMode = modes[0] || "afgewerkt";
+    state.finishId = state.finishMode === "afgewerkt" ? firstFinishedOf(line) : "wit-teverven";
     state.coreId = line.cores[0].id;
     state.modelId = line.models[0];
     state.height = line.heights ? line.heights[0] : null;
@@ -561,8 +710,11 @@
     state.swing = line.swings ? line.swings[0].id : null;
     state.glassId = line.glassOptions ? line.glassOptions[0].id : null;
     state.frameOptId = line.frame.options ? line.frame.options[0].id : null;
-    // default kruk passend bij afwerking
     state.handleId = defaultHandle(line);
+  }
+  function selectLine(id) {
+    if (state.lineId === id) return;
+    setLineDefaults(lineById(id));
     render();
   }
   function defaultHandle(line) {
@@ -573,34 +725,77 @@
   /* ---- STAP 3 : afwerking ---------------------------------------------- */
   function renderFinish() {
     var line = lineById(state.lineId);
+    var modes = lineModes(line);
     var kids = [h("h2", {}, ["Kies je afwerking"]), h("p", { class: "sub" }, [line.name])];
 
-    line.finishGroups.forEach(function (gid) {
-      var grp = C.finishGroups.filter(function (g) { return g.id === gid; })[0];
-      if (!grp) return;
-      var finishes = grp.finishes.filter(function (f) {
-        return !line.finishFilter || line.finishFilter.indexOf(f.id) >= 0;
+    // 1) duidelijke keuze: hoe wil je de deur afgewerkt?
+    var modeCards = {
+      afgewerkt: { ic: "✨", t: "Kant-en-klaar afgewerkt", d: "Volledig afgewerkt geleverd — je hoeft niet te schilderen. Hout, mat, beton, staal-glas …" },
+      schilderklaar: { ic: "🖌️", t: "Schilderklaar (ik schilder zelf)", d: "Voordeligst. Wit voorgelakt; jij schildert in je eigen kleur." },
+      geschilderd: { ic: "🎨", t: "In mijn kleur geschilderd", d: "Wij leveren de deur kant-en-klaar geschilderd in de kleur die jij kiest. (+ " + euro(C.paintService.pricePerDoor) + "/deur)" },
+    };
+    kids.push(h("div", { class: "finish-mode-grid" }, modes.map(function (mid) {
+      var mc = modeCards[mid];
+      return h("button", {
+        class: "fmode-card" + (state.finishMode === mid ? " sel" : ""),
+        onclick: function () { setFinishMode(mid, line); },
+      }, [
+        h("span", { class: "fmc-ic" }, [mc.ic]),
+        h("span", { class: "fmc-txt" }, [h("strong", {}, [mc.t]), h("small", {}, [mc.d])]),
+        h("span", { class: "aud-check" }, [state.finishMode === mid ? "✓" : ""]),
+      ]);
+    })));
+
+    // 2) opties afhankelijk van de gekozen modus
+    if (state.finishMode === "afgewerkt") {
+      line.finishGroups.forEach(function (gid) {
+        if (gid === "te-verven") return;
+        var grp = C.finishGroups.filter(function (g) { return g.id === gid; })[0];
+        if (!grp) return;
+        var finishes = grp.finishes.filter(function (f) { return !line.finishFilter || line.finishFilter.indexOf(f.id) >= 0; });
+        if (!finishes.length) return;
+        kids.push(h("div", { class: "finish-group" }, [
+          h("h3", {}, [grp.name]),
+          h("p", { class: "grp-blurb" }, [grp.blurb]),
+          h("div", { class: "tile-grid" }, finishes.map(function (f) {
+            return h("button", {
+              class: "tile" + (state.finishId === f.id ? " sel" : ""),
+              onclick: function () { state.finishId = f.id; render(); },
+            }, [
+              h("div", { class: "tile-door", html: tileDoorSVG({ finish: f }, state.modelId, line) }, []),
+              h("span", { class: "tile-name" }, [f.name]),
+            ]);
+          })),
+        ]));
       });
-      if (!finishes.length) return;
+    } else if (state.finishMode === "schilderklaar") {
+      kids.push(h("div", { class: "finish-note" }, [
+        h("p", {}, ["✅ Je ontvangt een net wit voorgelakte deur. Je schildert ze zelf af in de kleur die je wil — ideaal als je later nog wil aanpassen of matchen met je muur."]),
+      ]));
+    } else if (state.finishMode === "geschilderd") {
+      kids.push(h("div", { class: "finish-note" }, [
+        h("p", {}, ["✅ Wij schilderen de deur in onze werkplaats in jouw kleur. Ze wordt volledig afgewerkt geleverd — meteen klaar om te plaatsen."]),
+      ]));
       kids.push(h("div", { class: "finish-group" }, [
-        h("h3", {}, [grp.name]),
-        h("p", { class: "grp-blurb" }, [grp.blurb]),
-        h("div", { class: "swatch-grid" }, finishes.map(function (f) {
+        h("h3", {}, ["Kies je kleur"]),
+        h("div", { class: "tile-grid" }, C.paintColors.map(function (pc) {
           return h("button", {
-            class: "swatch" + (state.finishId === f.id ? " sel" : ""),
-            onclick: function () { state.finishId = f.id; render(); },
+            class: "tile" + (state.paintColor === pc.id ? " sel" : ""),
+            onclick: function () { state.paintColor = pc.id; render(); },
           }, [
-            h("span", { class: "chip", style: "background:" + f.swatch }, []),
-            h("span", { class: "sw-name" }, [f.name]),
+            h("div", { class: "tile-door", html: tileDoorSVG({ finish: { id: "p-" + pc.id, name: pc.name, swatch: pc.swatch, tags: ["mat"] } }, state.modelId, line) }, []),
+            h("span", { class: "tile-name" }, [pc.name]),
           ]);
         })),
+        h("p", { class: "mt-note" }, ["Andere RAL-kleur gewenst? Dat kan — vermeld het bij je bestelling."]),
       ]));
-    });
+    }
 
     // core (indien meerdere)
     if (line.cores.length > 1) {
       kids.push(h("div", { class: "finish-group" }, [
         h("h3", {}, ["Deurkern"]),
+        h("p", { class: "grp-blurb" }, ["Bepaalt gewicht, geluid en prijs. ", h("a", { href: "#", onclick: function (e) { e.preventDefault(); goView("guide"); } }, ["Meer uitleg in de keuzehulp →"])]),
         h("div", { class: "opt-grid" }, line.cores.map(function (c) {
           return h("button", {
             class: "opt" + (state.coreId === c.id ? " sel" : ""),
@@ -610,8 +805,15 @@
       ]));
     }
 
-    kids.push(btnRow([backBtn(), nextBtn("Volgende →", function () { state.step = 4; render(); }, !state.finishId)]));
+    kids.push(btnRow([backBtn(), nextBtn("Volgende →", function () { state.step = 4; render(); })]));
     return card("", kids);
+  }
+
+  function setFinishMode(mid, line) {
+    state.finishMode = mid;
+    if (mid === "afgewerkt") { if (!state.finishId || state.finishId === "wit-teverven") state.finishId = firstFinishedOf(line); }
+    else { state.finishId = "wit-teverven"; }
+    render();
   }
 
   /* ---- STAP 4 : model + glas ------------------------------------------- */
@@ -836,7 +1038,7 @@
   /* ---- STAP 8 : resultaat + offerte ------------------------------------ */
   function renderResult() {
     var line = lineById(state.lineId);
-    var fg = finishById(state.finishId);
+    var fg = activeFinish();
     var kids = [h("h2", {}, ["Jouw samenstelling"])];
 
     kids.push(h("div", { class: "result-grid" }, [
@@ -864,6 +1066,7 @@
     kids.push(h("div", { class: "price-breakdown" }, [
       h("h3", {}, ["Prijsopbouw (" + vatLabel() + ")"]),
       priceLine("Deurblad", calcLeaf(line)),
+      calcPaint() ? priceLine("Geschilderd op kleur", calcPaint()) : null,
       priceLine("Deurkast", calcFrame(line)),
       calcLock() ? priceLine("Slot-supplement", calcLock()) : null,
       calcHandle() ? priceLine("Kruk/greep", calcHandle()) : null,
@@ -927,7 +1130,7 @@
   function uid() { return "d" + (state.cart.length + 1) + "-" + state._seq++; }
   function addToCart(goCheckout) {
     var line = lineById(state.lineId);
-    var fg = finishById(state.finishId);
+    var fg = activeFinish();
     var item = {
       uid: state.editingUid || uid(),
       label: currentItemLabel(line, fg),
@@ -983,15 +1186,16 @@
     return h("div", { class: "door-shell", html: bigDoorSVG(line, fg, false) });
   }
 
-  // genereert de volledige SVG (thumb=true → compacte versie voor mandje)
+  // genereert een realistische deur in een kamerscène
   function bigDoorSVG(line, fg, thumb) {
     var m = C.models[state.modelId];
     var sw = fg ? fg.finish.swatch : "#eee";
     var isGrad = sw.indexOf("gradient") >= 0;
     var cols2 = (sw.match(/#[0-9a-fA-F]{3,6}/g) || ["#ddd", "#ccc"]);
     var base = isGrad ? cols2[0] : sw;
-    var base2 = isGrad ? (cols2[1] || cols2[0]) : shade(sw, -8);
-    var isDark = luma(base) < 90;
+    var base2 = isGrad ? (cols2[1] || cols2[0]) : shade(sw, -10);
+    var isDark = luma(base) < 95;
+    var mat = fg ? materialOf(fg) : "matte";
 
     var frameCol = "#e7e3da";
     if (line.frame.options && state.frameOptId) {
@@ -999,88 +1203,169 @@
       frameCol = fo === "black-mat" ? "#1c1c1e" : fo.indexOf("oak") >= 0 ? "#c49a5f" : "#eceae4";
     }
     var handleLeft = state.hinge === "links";
-    var uidp = "g" + Math.abs(hashStr((state.finishId || "") + state.modelId + (state.frameOptId || "")));
+    var u = "g" + Math.abs(hashStr((fg ? fg.finish.id : "") + state.modelId + (state.frameOptId || "") + (state.lockColor || "")));
 
-    // room scene: 200x400 viewport
+    var invisible = line.invisible;
+    var dx = invisible ? 18 : 20, dy = invisible ? 14 : 16, dw = invisible ? 164 : 160, dh = invisible ? 312 : 308;
+
     var s = '<svg viewBox="0 0 200 400" class="big-svg" preserveAspectRatio="xMidYMid meet">';
     s += '<defs>';
-    // muur-gradient
-    s += '<linearGradient id="wall' + uidp + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#efece6"/><stop offset="1" stop-color="#e2ded6"/></linearGradient>';
-    // vloer-gradient
-    s += '<linearGradient id="floor' + uidp + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8cbb8"/><stop offset="1" stop-color="#c9b9a2"/></linearGradient>';
-    // deur-materiaal
-    s += '<linearGradient id="door' + uidp + '" x1="0" y1="0" x2="1" y2="0.15"><stop offset="0" stop-color="' + shade(base, 6) + '"/><stop offset="0.5" stop-color="' + base + '"/><stop offset="1" stop-color="' + base2 + '"/></linearGradient>';
-    // houtnerf-textuur
-    if (isGrad) {
-      s += '<filter id="wood' + uidp + '"><feTurbulence type="fractalNoise" baseFrequency="0.012 0.11" numOctaves="3" seed="7" result="n"/>' +
-           '<feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.05 0"/>' +
-           '<feComposite operator="over" in2="SourceGraphic"/></filter>';
+    s += '<linearGradient id="wall' + u + '" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0" stop-color="#f1eee8"/><stop offset="1" stop-color="#e4e0d8"/></linearGradient>';
+    s += '<linearGradient id="floor' + u + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d6c7b0"/><stop offset="1" stop-color="#c6b499"/></linearGradient>';
+    // deur-basisgradient (lichtval van linksboven)
+    s += '<linearGradient id="door' + u + '" x1="0" y1="0" x2="1" y2="0.25"><stop offset="0" stop-color="' + shade(base, 12) + '"/><stop offset="0.45" stop-color="' + base + '"/><stop offset="1" stop-color="' + base2 + '"/></linearGradient>';
+    // sheen-overlay (diagonale glans)
+    s += '<linearGradient id="sheen' + u + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgba(255,255,255,0.16)"/><stop offset="0.35" stop-color="rgba(255,255,255,0)"/><stop offset="1" stop-color="rgba(0,0,0,0.05)"/></linearGradient>';
+    s += '<linearGradient id="glass' + u + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6eef1"/><stop offset="0.5" stop-color="#c2d4da"/><stop offset="1" stop-color="#f0f5f6"/></linearGradient>';
+    // materiaal-textuurfilters
+    if (mat === "wood") {
+      s += '<filter id="tex' + u + '" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency="0.16 0.012" numOctaves="4" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0"/></filter>';
+    } else if (mat === "marble") {
+      s += '<filter id="tex' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.022 0.03" numOctaves="5" seed="9" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.25  0 0 0 0 0.27  0 0 0 0 0.3  0 0 0 0.9 -0.35"/></filter>';
+    } else if (mat === "concrete") {
+      s += '<filter id="tex' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.06 0"/></filter>';
     }
-    // glas-gradient
-    s += '<linearGradient id="glass' + uidp + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#dfeaee"/><stop offset="0.5" stop-color="#c4d6db"/><stop offset="1" stop-color="#eef4f5"/></linearGradient>';
     s += '</defs>';
 
-    // achtergrond muur + vloer + plint
-    s += '<rect x="0" y="0" width="200" height="330" fill="url(#wall' + uidp + ')"/>';
-    s += '<rect x="0" y="330" width="200" height="70" fill="url(#floor' + uidp + ')"/>';
-    s += '<rect x="0" y="326" width="200" height="8" fill="#f4f1ea"/>'; // plint
-    // zachte schaduw deur op vloer
-    s += '<ellipse cx="104" cy="334" rx="92" ry="7" fill="rgba(0,0,0,0.14)"/>';
+    // kamer
+    s += '<rect x="0" y="0" width="200" height="332" fill="url(#wall' + u + ')"/>';
+    s += '<rect x="0" y="332" width="200" height="68" fill="url(#floor' + u + ')"/>';
+    // vloerplanken
+    for (var fp = 0; fp < 4; fp++) s += '<line x1="0" y1="' + (344 + fp * 15) + '" x2="200" y2="' + (344 + fp * 15) + '" stroke="rgba(120,90,60,0.12)" stroke-width="1"/>';
+    s += '<rect x="0" y="328" width="200" height="7" fill="#f5f2ec"/>'; // plint
+    // vloerreflectie van de deur
+    s += '<rect x="' + dx + '" y="332" width="' + dw + '" height="26" fill="' + base + '" opacity="0.16"/>';
+    // slagschaduw
+    s += '<ellipse cx="106" cy="335" rx="90" ry="6" fill="rgba(0,0,0,0.16)"/>';
 
-    // kader / deurkast
-    var invisible = line.invisible;
+    // kader
     if (!invisible) {
-      s += '<rect x="8" y="8" width="184" height="322" rx="2" fill="' + frameCol + '"/>';
-      s += '<rect x="8" y="8" width="184" height="322" rx="2" fill="none" stroke="rgba(0,0,0,.08)"/>';
+      s += '<rect x="10" y="10" width="180" height="322" rx="2" fill="' + shade(frameCol, 6) + '"/>';
+      s += '<rect x="13" y="13" width="174" height="319" rx="1.5" fill="' + frameCol + '"/>';
+      s += '<rect x="10" y="10" width="180" height="322" rx="2" fill="none" stroke="rgba(0,0,0,.08)"/>';
     } else {
-      // verdoken: dunne schaduwlijn rondom
-      s += '<rect x="14" y="10" width="172" height="320" rx="1" fill="rgba(0,0,0,.05)"/>';
+      s += '<rect x="' + (dx - 3) + '" y="' + (dy - 2) + '" width="' + (dw + 6) + '" height="' + (dh + 4) + '" rx="1.5" fill="rgba(0,0,0,.06)"/>';
     }
 
-    // deurblad
-    var dx = invisible ? 16 : 18, dy = invisible ? 12 : 14, dw = invisible ? 168 : 164, dh = invisible ? 316 : 312;
-    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#door' + uidp + ')"/>';
-    if (isGrad) s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" filter="url(#wood' + uidp + ')" fill="' + base + '"/>';
-    // subtiele lichtval links
-    s += '<rect x="' + dx + '" y="' + dy + '" width="14" height="' + dh + '" fill="rgba(255,255,255,.08)"/>';
-    s += '<rect x="' + (dx + dw - 10) + '" y="' + dy + '" width="10" height="' + dh + '" fill="rgba(0,0,0,.06)"/>';
+    // deurblad basis
+    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#door' + u + ')"/>';
+    // materiaal-textuur overlay
+    if (mat === "wood" || mat === "marble" || mat === "concrete") {
+      var op = mat === "wood" ? 0.5 : mat === "marble" ? 0.75 : 0.5;
+      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" filter="url(#tex' + u + ')" opacity="' + op + '"/>';
+    }
+    if (mat === "wood") {
+      // enkele langsnerven/planknaad
+      for (var wp = 1; wp < 3; wp++) s += '<line x1="' + (dx + wp * dw / 3) + '" y1="' + dy + '" x2="' + (dx + wp * dw / 3) + '" y2="' + (dy + dh) + '" stroke="rgba(60,40,20,0.10)" stroke-width="1"/>';
+    }
+    if (mat === "marble") {
+      s += '<path d="M' + (dx + 20) + ',' + (dy + 40) + ' q40,30 90,10 t60,40" stroke="rgba(90,95,105,0.35)" stroke-width="1.4" fill="none"/>';
+      s += '<path d="M' + (dx + 10) + ',' + (dy + 160) + ' q60,-20 110,30 t40,20" stroke="rgba(90,95,105,0.28)" stroke-width="1.2" fill="none"/>';
+    }
+    // glans + randlicht
+    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="1.5" fill="url(#sheen' + u + ')"/>';
+    s += '<rect x="' + dx + '" y="' + dy + '" width="4" height="' + dh + '" fill="rgba(255,255,255,.14)"/>';
 
     // model-detail
     var cx = dx, cy = dy, cw = dw, ch = dh;
     if (m.glass && m.grid) {
+      var stC = isDark ? "#0e0e0f" : "#1f2124";
       var gcols = m.grid[0], grows = m.grid[1];
-      var gx = cx + 8, gy = cy + 8, gw2 = (cw - 16) / gcols, gh2 = (ch - 16) / grows;
-      s += '<rect x="' + gx + '" y="' + gy + '" width="' + (cw - 16) + '" height="' + (ch - 16) + '" fill="url(#glass' + uidp + ')" stroke="' + (isDark ? "#111" : "#2a2a2a") + '" stroke-width="4"/>';
-      // reflectie-strepen
-      s += '<line x1="' + (gx + 6) + '" y1="' + (gy + 12) + '" x2="' + (gx + 30) + '" y2="' + (gy + 40) + '" stroke="rgba(255,255,255,.5)" stroke-width="3"/>';
-      for (var c = 1; c < gcols; c++) s += '<line x1="' + (gx + c * gw2) + '" y1="' + gy + '" x2="' + (gx + c * gw2) + '" y2="' + (gy + ch - 16) + '" stroke="' + (isDark ? "#111" : "#2a2a2a") + '" stroke-width="4"/>';
-      for (var r = 1; r < grows; r++) s += '<line x1="' + gx + '" y1="' + (gy + r * gh2) + '" x2="' + (gx + cw - 16) + '" y2="' + (gy + r * gh2) + '" stroke="' + (isDark ? "#111" : "#2a2a2a") + '" stroke-width="4"/>';
+      var gx = cx + 10, gy = cy + 10, gw2 = (cw - 20) / gcols, gh2 = (ch - 20) / grows;
+      s += '<rect x="' + gx + '" y="' + gy + '" width="' + (cw - 20) + '" height="' + (ch - 20) + '" fill="url(#glass' + u + ')" stroke="' + stC + '" stroke-width="5"/>';
+      s += '<polygon points="' + (gx + 8) + ',' + gy + ' ' + (gx + 40) + ',' + gy + ' ' + (gx + 12) + ',' + (gy + ch - 20) + ' ' + gx + ',' + (gy + ch - 20) + '" fill="rgba(255,255,255,0.18)"/>';
+      for (var c = 1; c < gcols; c++) s += '<line x1="' + (gx + c * gw2) + '" y1="' + gy + '" x2="' + (gx + c * gw2) + '" y2="' + (gy + ch - 20) + '" stroke="' + stC + '" stroke-width="5"/>';
+      for (var r = 1; r < grows; r++) s += '<line x1="' + gx + '" y1="' + (gy + r * gh2) + '" x2="' + (gx + cw - 20) + '" y2="' + (gy + r * gh2) + '" stroke="' + stC + '" stroke-width="5"/>';
     } else if (m.lines) {
-      var lc = isDark ? "rgba(255,255,255,.14)" : "rgba(0,0,0,.16)";
+      var lc = isDark ? "rgba(255,255,255,.16)" : "rgba(0,0,0,.15)";
+      var lc2 = isDark ? "rgba(0,0,0,.25)" : "rgba(255,255,255,.35)";
       for (var i = 0; i < m.lines; i++) {
         if (m.orient === "h") {
-          var yy = cy + 50 + i * ((ch - 100) / Math.max(1, m.lines));
-          s += '<line x1="' + (cx + 14) + '" y1="' + yy + '" x2="' + (cx + cw - 14) + '" y2="' + yy + '" stroke="' + lc + '" stroke-width="2"/>';
+          var yy = cy + 55 + i * ((ch - 110) / Math.max(1, m.lines));
+          s += '<line x1="' + (cx + 16) + '" y1="' + yy + '" x2="' + (cx + cw - 16) + '" y2="' + yy + '" stroke="' + lc + '" stroke-width="2.5"/>';
+          s += '<line x1="' + (cx + 16) + '" y1="' + (yy + 1.5) + '" x2="' + (cx + cw - 16) + '" y2="' + (yy + 1.5) + '" stroke="' + lc2 + '" stroke-width="1"/>';
         } else {
-          var xx = cx + 34 + i * ((cw - 68) / Math.max(1, m.lines));
-          s += '<line x1="' + xx + '" y1="' + (cy + 12) + '" x2="' + xx + '" y2="' + (cy + ch - 12) + '" stroke="' + lc + '" stroke-width="2"/>';
+          var xx = cx + 38 + i * ((cw - 76) / Math.max(1, m.lines));
+          s += '<line x1="' + xx + '" y1="' + (cy + 14) + '" x2="' + xx + '" y2="' + (cy + ch - 14) + '" stroke="' + lc + '" stroke-width="2.5"/>';
+          s += '<line x1="' + (xx + 1.5) + '" y1="' + (cy + 14) + '" x2="' + (xx + 1.5) + '" y2="' + (cy + ch - 14) + '" stroke="' + lc2 + '" stroke-width="1"/>';
         }
       }
+    }
+
+    // scharnieren (zichtbaar enkel bij niet-verdoken)
+    if (!invisible) {
+      var hxs = handleLeft ? dx + dw - 3 : dx - 1;
+      [dy + 30, dy + dh / 2, dy + dh - 40].forEach(function (hy) {
+        s += '<rect x="' + hxs + '" y="' + hy + '" width="4" height="20" rx="1" fill="rgba(0,0,0,0.18)"/>';
+      });
     }
 
     // kruk / greep
     var isGreep = line.handleType === "greep";
     if (state.handleId !== "geen") {
-      var hcol = state.lockColor === "zwart" ? "#1c1c1e" : "#9a948a";
+      var hcol = state.lockColor === "zwart" ? "#1b1b1d" : "#a7a199";
+      var hcolD = state.lockColor === "zwart" ? "#000" : "#7d766c";
       if (isGreep) {
-        var gx2 = handleLeft ? dx + 10 : dx + dw - 16;
-        s += '<rect x="' + gx2 + '" y="150" width="6" height="90" rx="3" fill="#222"/>';
+        var gx2 = handleLeft ? dx + 12 : dx + dw - 18;
+        s += '<rect x="' + gx2 + '" y="145" width="6" height="100" rx="3" fill="' + hcol + '"/>';
+        s += '<rect x="' + gx2 + '" y="145" width="2" height="100" fill="' + hcolD + '"/>';
       } else {
-        var hxx = handleLeft ? dx + 8 : dx + dw - 30;
-        s += '<circle cx="' + (handleLeft ? dx + 12 : dx + dw - 12) + '" cy="208" r="5" fill="' + hcol + '"/>';
-        s += '<rect x="' + hxx + '" y="205" width="22" height="5" rx="2.5" fill="' + hcol + '"/>';
+        var rox = handleLeft ? dx + 13 : dx + dw - 13;
+        var barX = handleLeft ? rox : rox - 24;
+        s += '<ellipse cx="' + rox + '" cy="209" rx="6" ry="7" fill="' + hcolD + '"/>';
+        s += '<rect x="' + barX + '" y="205" width="24" height="6" rx="3" fill="' + hcol + '"/>';
+        s += '<rect x="' + barX + '" y="205" width="24" height="2" rx="1" fill="rgba(255,255,255,0.25)"/>';
       }
     }
+    s += "</svg>";
+    return s;
+  }
+
+  // compacte deur-tegel voor keuzemenu's (afwerking, kleur, lijn)
+  function tileDoorSVG(fg, modelId, line) {
+    var m = C.models[modelId] || C.models.vlak;
+    var sw = fg ? fg.finish.swatch : "#eee";
+    var isGrad = sw.indexOf("gradient") >= 0;
+    var cols2 = (sw.match(/#[0-9a-fA-F]{3,6}/g) || ["#ddd", "#ccc"]);
+    var base = isGrad ? cols2[0] : sw;
+    var base2 = isGrad ? (cols2[1] || cols2[0]) : shade(sw, -10);
+    var isDark = luma(base) < 95;
+    var mat = fg ? materialOf(fg) : "matte";
+    var u = "t" + Math.abs(hashStr((fg ? fg.finish.id : "") + modelId + (line ? line.id : "")));
+    var W = 88, H = 150, dx = 8, dy = 6, dw = W - 16, dh = H - 12;
+
+    var s = '<svg viewBox="0 0 ' + W + ' ' + H + '" class="tile-svg" preserveAspectRatio="xMidYMid meet">';
+    s += '<defs>';
+    s += '<linearGradient id="d' + u + '" x1="0" y1="0" x2="1" y2="0.25"><stop offset="0" stop-color="' + shade(base, 12) + '"/><stop offset="0.5" stop-color="' + base + '"/><stop offset="1" stop-color="' + base2 + '"/></linearGradient>';
+    s += '<linearGradient id="sh' + u + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="rgba(255,255,255,0.18)"/><stop offset="0.4" stop-color="rgba(255,255,255,0)"/><stop offset="1" stop-color="rgba(0,0,0,0.06)"/></linearGradient>';
+    s += '<linearGradient id="gl' + u + '" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6eef1"/><stop offset="1" stop-color="#c2d4da"/></linearGradient>';
+    if (mat === "wood") s += '<filter id="x' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.16 0.012" numOctaves="4" seed="4" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.5 0"/></filter>';
+    else if (mat === "marble") s += '<filter id="x' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.03 0.04" numOctaves="5" seed="9" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0.25 0 0 0 0 0.27 0 0 0 0 0.3 0 0 0 0.9 -0.35"/></filter>';
+    else if (mat === "concrete") s += '<filter id="x' + u + '"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/><feColorMatrix in="n" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.06 0"/></filter>';
+    s += '</defs>';
+    s += '<rect x="0" y="0" width="' + W + '" height="' + H + '" rx="6" fill="#efece6"/>';
+    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" fill="url(#d' + u + ')"/>';
+    if (mat === "wood" || mat === "marble" || mat === "concrete") {
+      var op = mat === "marble" ? 0.75 : 0.5;
+      s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" filter="url(#x' + u + ')" opacity="' + op + '"/>';
+    }
+    s += '<rect x="' + dx + '" y="' + dy + '" width="' + dw + '" height="' + dh + '" rx="2" fill="url(#sh' + u + ')"/>';
+    // model
+    if (m.glass && m.grid) {
+      var stC = isDark ? "#111" : "#23262a";
+      var gc = m.grid[0], gr = m.grid[1], gx = dx + 6, gy = dy + 6, gw = (dw - 12) / gc, gh = (dh - 12) / gr;
+      s += '<rect x="' + gx + '" y="' + gy + '" width="' + (dw - 12) + '" height="' + (dh - 12) + '" fill="url(#gl' + u + ')" stroke="' + stC + '" stroke-width="3"/>';
+      for (var c = 1; c < gc; c++) s += '<line x1="' + (gx + c * gw) + '" y1="' + gy + '" x2="' + (gx + c * gw) + '" y2="' + (gy + dh - 12) + '" stroke="' + stC + '" stroke-width="3"/>';
+      for (var r = 1; r < gr; r++) s += '<line x1="' + gx + '" y1="' + (gy + r * gh) + '" x2="' + (gx + dw - 6) + '" y2="' + (gy + r * gh) + '" stroke="' + stC + '" stroke-width="3"/>';
+    } else if (m.lines) {
+      var lc = isDark ? "rgba(255,255,255,.16)" : "rgba(0,0,0,.15)";
+      for (var i = 0; i < m.lines; i++) {
+        if (m.orient === "h") { var yy = dy + 24 + i * ((dh - 48) / Math.max(1, m.lines)); s += '<line x1="' + (dx + 8) + '" y1="' + yy + '" x2="' + (dx + dw - 8) + '" y2="' + yy + '" stroke="' + lc + '" stroke-width="1.5"/>'; }
+        else { var xx = dx + 18 + i * ((dw - 36) / Math.max(1, m.lines)); s += '<line x1="' + xx + '" y1="' + (dy + 6) + '" x2="' + xx + '" y2="' + (dy + dh - 6) + '" stroke="' + lc + '" stroke-width="1.5"/>'; }
+      }
+    }
+    // krukje
+    s += '<circle cx="' + (dx + dw - 8) + '" cy="' + (dy + dh / 2) + '" r="2.5" fill="' + (isDark ? "#ddd" : "#8a8378") + '"/>';
     s += "</svg>";
     return s;
   }
@@ -1109,7 +1394,7 @@
     var line = state.lineId ? lineById(state.lineId) : null;
     if (!line) { bar.classList.remove("show"); return; }
     bar.classList.add("show");
-    var fg = finishById(state.finishId);
+    var fg = activeFinish();
     $("#sum-line").textContent = line.name;
     $("#sum-detail").textContent = [
       fg ? fg.finish.name : "",
@@ -1168,7 +1453,7 @@
   }
 
   function buildConfigObject(line) {
-    var fg = finishById(state.finishId);
+    var fg = activeFinish();
     var o = {
       Productlijn: line.name,
       Afwerking: fg ? fg.finish.name : "—",

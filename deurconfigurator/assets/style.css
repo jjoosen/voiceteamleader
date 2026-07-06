@@ -271,6 +271,65 @@ h3 { font-size: 16px; margin: 0 0 10px; }
   #sum-detail { display: none; }
 }
 
+/* ===== galerij (startpunt) ===== */
+.gal-hero { background: linear-gradient(120deg, var(--teal-d), var(--teal)); color: #fff; }
+.gal-hero .hero-badge { background: rgba(255,255,255,.16); color: #fff; }
+.gal-hero h1 { color: #fff; font-size: 30px; margin: 8px 0; }
+.gal-hero .lead { color: rgba(255,255,255,.9); max-width: 680px; margin: 0 auto 18px; }
+.hero-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.gal-heading { margin: 24px 4px 12px; font-size: 20px; }
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+.gal-card {
+  text-align: left; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff;
+  cursor: pointer; font: inherit; padding: 0; transition: .16s; position: relative; display: flex; flex-direction: column;
+}
+.gal-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(20,40,40,.12); border-color: #cfe0dd; }
+.gal-door { background: linear-gradient(160deg,#f4f1eb,#e9e4da); }
+.gal-door svg { width: 100%; height: auto; display: block; }
+.gal-info { padding: 12px 14px 6px; }
+.gal-title { font-weight: 700; font-size: 15px; }
+.gal-tag { color: var(--teal); font-size: 12.5px; font-weight: 600; }
+.gal-meta { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; font-size: 12px; }
+.gal-line { color: var(--muted); }
+.gal-price { font-weight: 800; color: var(--teal-d); }
+.gal-cta { padding: 8px 14px 14px; color: var(--teal); font-weight: 600; font-size: 13px; }
+.gal-foot { text-align: center; margin: 26px 0 6px; }
+.gal-foot p { color: var(--muted); margin-bottom: 12px; }
+
+/* ===== deur-tegels in keuzemenu's ===== */
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
+.tile {
+  border: 2px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; font: inherit;
+  padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: .14s;
+}
+.tile:hover { border-color: #b9d0ce; transform: translateY(-2px); }
+.tile.sel { border-color: var(--sel); box-shadow: inset 0 0 0 1px var(--sel); }
+.tile-door { width: 100%; }
+.tile-door svg { width: 100%; height: auto; border-radius: 8px; display: block; }
+.tile-name { font-size: 12.5px; font-weight: 600; text-align: center; }
+
+/* ===== schilder-modus keuze ===== */
+.finish-mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.fmode-card {
+  display: flex; align-items: flex-start; gap: 12px; text-align: left; background: #fff; font: inherit;
+  border: 2px solid var(--line); border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: .14s;
+}
+.fmode-card:hover { border-color: #b9d0ce; }
+.fmode-card.sel { border-color: var(--teal); background: var(--sel-bg); }
+.fmc-ic { font-size: 26px; line-height: 1; }
+.fmc-txt { flex: 1; }
+.fmc-txt strong { display: block; font-size: 14.5px; }
+.fmc-txt small { color: var(--muted); font-size: 12.5px; }
+.finish-note { background: #f0f7ee; border-left: 3px solid var(--lime); border-radius: 8px; padding: 12px 14px; margin: 4px 0 16px; }
+.finish-note p { margin: 0; font-size: 14px; }
+
+/* ===== beeld-lijnkaarten ===== */
+.line-card.img { padding: 0; overflow: hidden; display: flex; flex-direction: column; }
+.line-card.img .lc-door { background: linear-gradient(160deg,#f4f1eb,#e9e4da); }
+.line-card.img .lc-door svg { width: 100%; height: auto; max-height: 190px; display: block; }
+.line-card.img .lc-body { padding: 14px 16px 16px; }
+.line-card.img h3 { margin: 4px 0; }
+
 /* ===== hoofdnavigatie ===== */
 .mainnav-bar { background: #fff; border-bottom: 1px solid var(--line); }
 .mainnav { max-width: 1080px; margin: 0 auto; display: flex; gap: 6px; padding: 8px 20px; }

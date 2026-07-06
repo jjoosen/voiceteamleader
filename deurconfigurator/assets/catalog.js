@@ -157,9 +157,27 @@ window.CATALOG = {
   extras: [
     { id: "voegband", name: "Zelfklevend voegband (100mm x 90m)", price: 27.21, per: "rol" },
     { id: "hechtmiddel", name: "Hechtmiddel (voorstrijk)", price: 29.0, per: "stuk" },
-    { id: "montageschuim", name: "THYS montageschuim voor deurkasten", price: 12.56, per: "bus" },
+    { id: "montageschuim", name: "Montageschuim voor deurkasten", price: 12.56, per: "bus" },
     { id: "tpe-zwart", name: "Zwarte TPE-dichtingsstrip (i.p.v. transparant)", price: 19.0, per: "set" },
     { id: "extra-scharnier", name: "Extra verdoken scharnier", price: 14.99, per: "stuk" },
+  ],
+
+  /* ---------------------------------------------------------------------- *
+   *  SCHILDERDIENST — deur in fabriek geschilderd geleverd (op kleur)
+   *  meerprijs per deur t.o.v. schilderklaar (indicatief)
+   * ---------------------------------------------------------------------- */
+  paintService: { pricePerDoor: 75.0 },
+  paintColors: [
+    { id: "ral9010", name: "Zuiver wit (RAL 9010)", swatch: "#f4f4f0" },
+    { id: "creme", name: "Crème / gebroken wit", swatch: "#ece2cf" },
+    { id: "lichtgrijs", name: "Lichtgrijs", swatch: "#cfd0cc" },
+    { id: "greige", name: "Greige / taupe", swatch: "#b3a998" },
+    { id: "salie", name: "Saliegroen", swatch: "#9aa585" },
+    { id: "olijf", name: "Olijfgroen", swatch: "#6d6f4b" },
+    { id: "navy", name: "Marineblauw", swatch: "#2b3a4a" },
+    { id: "antraciet", name: "Antraciet (RAL 7016)", swatch: "#383e42" },
+    { id: "zwart", name: "Diepzwart (RAL 9005)", swatch: "#1b1b1b" },
+    { id: "terracotta", name: "Terracotta", swatch: "#b56b4a" },
   ],
 
   /* ---------------------------------------------------------------------- *
