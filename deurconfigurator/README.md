@@ -1,7 +1,13 @@
-# Binnendeuren configurator
+# Binnendeuren — volledige website + configurator
 
-Een online verkooppunt / configurator voor binnendeuren, gericht op de
-**particuliere markt (gezinnen)** én **aannemers/vakmannen**. De bezoeker
+Een **complete website** rond binnendeuren: een marketing-homepagina,
+productdetailpagina's, Over ons, Contact en een footer — met daarin een
+volledige **configurator/webshop**. Gericht op de **particuliere markt
+(gezinnen)** én **aannemers/vakmannen**.
+
+Pagina's/secties (alles in één deploybare app):
+Home · Onze deuren (galerij) · Productdetailpagina per lijn · Bouwselector ·
+Keuzehulp · Configurator · Winkelmandje · Checkout · Over ons · Contact. De bezoeker
 beantwoordt enkele vragen over zijn wensen, krijgt meteen de **beste deur
 aanbevolen**, en verfijnt daarna afwerking, model, maat en beslag — met een
 **live richtprijs** en een grote **live deur-preview** die meebeweegt.

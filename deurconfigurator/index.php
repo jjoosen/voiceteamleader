@@ -41,6 +41,8 @@ $asset_v = @filemtime(__DIR__ . '/assets/app.js') ?: time();
 
   <main id="app" aria-live="polite"><!-- app rendert hier --></main>
 
+  <footer id="site-footer" class="site-footer"></footer>
+
   <div id="summary-bar" aria-hidden="true">
     <div class="inner">
       <div>

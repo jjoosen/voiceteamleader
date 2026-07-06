@@ -63,7 +63,7 @@
 
   /* ---- state ------------------------------------------------------------ */
   var state = {
-    view: "start",     // start | gallery | bouw | config | guide | cart | checkout | done
+    view: "home",      // home | start | gallery | bouw | product | about | contact | config | guide | cart | checkout | done
     step: 0,
     audience: "gezin", // gezin (particulier) | aannemer (vakman)
     advice: {},        // antwoorden adviesmotor
@@ -309,7 +309,16 @@
     app.innerHTML = "";
     var stepperEl = $("#stepper");
 
-    if (state.view === "start") {
+    if (state.view === "home") {
+      app.appendChild(renderHome());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "about") {
+      app.appendChild(renderAbout());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "contact") {
+      app.appendChild(renderContact());
+      if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "start") {
       app.appendChild(renderStart());
       if (stepperEl) stepperEl.style.display = "none";
     } else if (state.view === "bouw") {
@@ -353,21 +362,22 @@
 
     renderNav();
     renderModeSwitch();
+    renderFooter();
     updateSummary();
     if (screenChanged) window.scrollTo({ top: 0, behavior: "smooth" });
     else window.scrollTo(0, prevScroll); // blijf staan waar je was
   }
 
-  // hoofdnavigatie (Configureren / Keuzehulp / Winkelmandje) onder de header
+  // hoofdnavigatie onder de header
   function renderNav() {
     var el = $("#mainnav");
     if (!el) return;
     var count = state.cart.reduce(function (n, it) { return n + it.qty; }, 0);
     el.innerHTML = "";
     var items = [
-      { id: "gallery", label: "Deuren", ic: "🏠" },
+      { id: "home", label: "Home", ic: "⌂" },
+      { id: "gallery", label: "Deuren", ic: "🚪" },
       { id: "bouw", label: "Bouwselector", ic: "📐" },
-      { id: "config", label: "Configureren", ic: "🚪" },
       { id: "guide", label: "Keuzehulp", ic: "💡" },
     ];
     items.forEach(function (it) {
@@ -2644,6 +2654,189 @@
   /* ====================================================================== *
    *  KEUZEHULP (buying guide) — helpt particulieren kiezen
    * ====================================================================== */
+  /* ====================================================================== *
+   *  HOMEPAGINA (marketing landing)
+   * ====================================================================== */
+  // deurbeeld met tijdelijke, schone state (voor home/hero-beelden)
+  function tempDoorSVG(lineId, finishId, modelId) {
+    var line = lineById(lineId);
+    var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor;
+    setLineDefaults(line);
+    if (finishId) { state.finishMode = "afgewerkt"; state.finishId = finishId; }
+    if (modelId) state.modelId = modelId;
+    var svg = bigDoorSVG(line, activeFinish(), false);
+    Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
+    return svg;
+  }
+
+  function renderHome() {
+    var lines = C.lines;
+    return h("div", { class: "home" }, [
+      // hero
+      h("div", { class: "home-hero" }, [
+        h("div", { class: "hh-text" }, [
+          h("div", { class: "hero-badge light" }, ["Binnendeuren op maat · Made in Belgium"]),
+          h("h1", {}, ["Mooie binnendeuren, ", h("span", { class: "hl" }, ["simpel samengesteld."])]),
+          h("p", { class: "lead" }, ["Van strak en onzichtbaar tot warme houtlook, staal-glas of plafondhoog. Stel je deur samen met een live 3D-voorbeeld en een directe richtprijs — of laat je begeleiden, ruimte per ruimte."]),
+          h("div", { class: "hh-cta" }, [
+            h("button", { class: "btn primary lg", onclick: function () { goView("gallery"); } }, ["Stel je deur samen →"]),
+            h("button", { class: "btn ghost lg", onclick: function () { goView("guide"); } }, ["💡 Keuzehulp"]),
+          ]),
+          h("div", { class: "hh-facts" }, BRAND_FACTS.map(function (f) { return h("span", {}, [f]); })),
+        ]),
+        h("div", { class: "hh-media", html: tempDoorSVG("invisible-flat", "nature-oak", "vlak") }, []),
+      ]),
+
+      // productlijnen
+      h("div", { class: "home-sec" }, [
+        h("h2", {}, ["Onze collecties"]),
+        h("p", { class: "sub center" }, ["Vijf lijnen voor elke stijl en elk budget. Klik door voor alle details."]),
+        h("div", { class: "home-lines" }, lines.map(function (l) {
+          var info = LINE_INFO[l.id] || { plain: l.name, icon: "🚪" };
+          var rep = REP_FINISH(l);
+          return h("button", { class: "home-line", onclick: function () { openProduct(l.id); } }, [
+            h("div", { class: "hl-door", html: tileDoorSVG(rep.fg, rep.model, l) }, []),
+            h("div", { class: "hl-body" }, [
+              h("div", { class: "line-badge" }, [l.badge]),
+              h("strong", {}, [l.name]),
+              h("small", {}, [info.plain]),
+              h("span", { class: "hl-from" }, ["vanaf " + euro(lowestFrom(l))]),
+            ]),
+          ]);
+        })),
+      ]),
+
+      // hoe werkt het
+      h("div", { class: "home-sec alt" }, [
+        h("h2", {}, ["Hoe werkt het?"]),
+        h("div", { class: "steps4" }, [
+          homeStep("1", "🚪", "Kies je deur", "Blader door realistische voorbeelden of laat je adviseren."),
+          homeStep("2", "🎨", "Personaliseer", "Afwerking, maat, beslag — met live 3D-voorbeeld en prijs."),
+          homeStep("3", "🛒", "Bestel online", "In het winkelmandje, veilig afrekenen of offerte vragen."),
+          homeStep("4", "🚚", "Wij leveren", "Plaatsklaar geleverd, klaar om te monteren."),
+        ]),
+      ]),
+
+      // twee paden: particulier vs project
+      h("div", { class: "home-sec" }, [
+        h("div", { class: "home-split" }, [
+          h("div", { class: "hs-card" }, [
+            h("span", { class: "hs-ic" }, ["🏠"]),
+            h("h3", {}, ["Voor je woning"]),
+            h("p", {}, ["Stel deur per deur samen met advies op maat van elke ruimte."]),
+            h("button", { class: "btn primary", onclick: function () { goView("gallery"); } }, ["Naar de deuren →"]),
+          ]),
+          h("div", { class: "hs-card feature" }, [
+            h("span", { class: "hs-ic" }, ["📐"]),
+            h("h3", {}, ["Voor een project"]),
+            h("p", {}, ["Upload je bouwplan en bepaal alle deuren, maten en aantallen in één keer."]),
+            h("button", { class: "btn primary", onclick: function () { goView("bouw"); } }, ["Naar de bouwselector →"]),
+          ]),
+        ]),
+      ]),
+
+      // slot-CTA
+      h("div", { class: "home-cta" }, [
+        h("h2", {}, ["Klaar om te starten?"]),
+        h("p", {}, ["Ontdek in 2 minuten welke deur bij jou past."]),
+        h("button", { class: "btn primary lg", onclick: function () { goView("gallery"); } }, ["Start nu →"]),
+      ]),
+    ]);
+  }
+  function homeStep(n, ic, t, d) {
+    return h("div", { class: "step4" }, [
+      h("div", { class: "s4-n" }, [n]), h("div", { class: "s4-ic" }, [ic]),
+      h("strong", {}, [t]), h("p", {}, [d]),
+    ]);
+  }
+
+  /* ---- Over ons ---- */
+  function renderAbout() {
+    return h("div", {}, [
+      h("div", { class: "panel prod-sec" }, [
+        h("div", { class: "hero-badge" }, ["Over ons"]),
+        h("h2", {}, ["Vakmanschap in binnendeuren"]),
+        h("p", { class: "ph-intro" }, ["Wij brengen kwalitatieve, Belgische binnendeuren rechtstreeks bij jou — online samen te stellen en plaatsklaar geleverd. Van strak-onzichtbaar tot warme houtlook: elke deur wordt op maat gemaakt en met zorg afgewerkt."]),
+        h("div", { class: "ph-facts" }, BRAND_FACTS.map(function (f) { return h("span", {}, [f]); })),
+      ]),
+      h("div", { class: "panel prod-sec" }, [
+        h("h3", {}, ["Waarom bij ons?"]),
+        h("ul", { class: "prod-list" }, [
+          "Made in Belgium — geen anonieme import",
+          "10 jaar garantie op deurgeheel en beslag",
+          "Verdoken, 3D-regelbare scharnieren en stil magnetisch slot",
+          "Van standaard tot plafondhoog (300 cm), volledig op maat",
+          "Duidelijke richtprijs vooraf — geen verrassingen",
+        ].map(function (x) { return h("li", {}, [x]); })),
+      ]),
+      h("div", { class: "prod-cta" }, [h("button", { class: "btn primary lg", onclick: function () { goView("gallery"); } }, ["Bekijk de collectie →"])]),
+    ]);
+  }
+
+  /* ---- Contact ---- */
+  function renderContact() {
+    return h("div", {}, [
+      h("div", { class: "panel prod-sec" }, [
+        h("div", { class: "hero-badge" }, ["Contact"]),
+        h("h2", {}, ["Vragen? We helpen je graag"]),
+        h("div", { class: "contact-grid" }, [
+          h("div", {}, [
+            h("p", { class: "ph-intro" }, ["Laat je gegevens achter en we nemen snel contact op. Of stel meteen je deur samen en vraag je offerte aan."]),
+            h("div", { class: "contact-info" }, [
+              h("div", {}, [h("strong", {}, ["📞 Telefoon"]), h("br"), "op aanvraag"]),
+              h("div", {}, [h("strong", {}, ["✉️ E-mail"]), h("br"), "via het formulier"]),
+              h("div", {}, [h("strong", {}, ["🏬 Toonzaal"]), h("br"), "op afspraak"]),
+            ]),
+          ]),
+          h("div", { class: "contact-form" }, [
+            h("div", { class: "form-grid" }, [
+              cfield("c-naam", "Naam", "text"),
+              cfield("c-email", "E-mail", "email"),
+              cfield("c-tel", "Telefoon", "tel"),
+              cfield("c-postcode", "Postcode", "text"),
+            ]),
+            h("textarea", { id: "c-bericht", placeholder: "Je vraag of bericht", rows: "4" }, []),
+            h("button", { class: "btn primary", onclick: submitContact }, ["Verstuur bericht"]),
+            h("div", { id: "c-msg", class: "quote-msg" }, []),
+          ]),
+        ]),
+      ]),
+    ]);
+  }
+  function cfield(id, label, type) {
+    return h("div", { class: "field" }, [h("label", {}, [label]), h("input", { id: id, type: type }, [])]);
+  }
+  function submitContact() {
+    var msg = $("#c-msg");
+    var naam = ($("#c-naam") || {}).value || "", email = ($("#c-email") || {}).value || "";
+    if (!naam.trim() || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { msg.className = "quote-msg err"; msg.textContent = "Vul je naam en een geldig e-mailadres in."; return; }
+    var payload = { klant: { naam: naam, email: email, tel: ($("#c-tel") || {}).value || "", postcode: ($("#c-postcode") || {}).value || "", bericht: ($("#c-bericht") || {}).value || "" }, configuratie: { Type: "Contactformulier" }, totaalTekst: "—" };
+    msg.className = "quote-msg"; msg.textContent = "Versturen…";
+    fetch("lead.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
+      .then(function (res) { msg.className = "quote-msg ok"; msg.textContent = res && res.ok ? "Bedankt! We nemen snel contact op." : "Bedankt! Je bericht is genoteerd."; })
+      .catch(function () { msg.className = "quote-msg ok"; msg.textContent = "Bedankt! Je bericht is genoteerd."; });
+  }
+
+  /* ---- footer (op elke pagina) ---- */
+  function renderFooter() {
+    var el = $("#site-footer");
+    if (!el) return;
+    el.innerHTML = "";
+    var link = function (label, v) { return h("button", { class: "foot-link", onclick: function () { goView(v); } }, [label]); };
+    el.appendChild(h("div", { class: "foot-inner" }, [
+      h("div", { class: "foot-col" }, [
+        h("div", { class: "foot-brand" }, ["Binnendeuren configurator"]),
+        h("p", {}, ["Belgische binnendeuren, online samengesteld en plaatsklaar geleverd."]),
+        h("div", { class: "foot-facts" }, ["🇧🇪 Made in Belgium · 🛡️ 10 jaar garantie"]),
+      ]),
+      h("div", { class: "foot-col" }, [h("h4", {}, ["Menu"]), link("Home", "home"), link("Onze deuren", "gallery"), link("Bouwselector", "bouw"), link("Keuzehulp", "guide")]),
+      h("div", { class: "foot-col" }, [h("h4", {}, ["Info"]), link("Over ons", "about"), link("Contact", "contact"), link("Winkelmandje", "cart")]),
+      h("div", { class: "foot-col" }, [h("h4", {}, ["Goed om te weten"]), h("p", { class: "foot-small" }, ["Richtprijzen incl. 21% btw. Definitieve prijs volgt op offerte. Plaatsing niet inbegrepen."])]),
+    ]));
+    el.appendChild(h("div", { class: "foot-bottom" }, ["© 2026 Binnendeuren configurator · Alle rechten voorbehouden"]));
+  }
+
   /* ====================================================================== *
    *  PRODUCT-DETAILPAGINA (op basis van de folders)
    * ====================================================================== */
