@@ -1924,14 +1924,12 @@ window.CATALOG = {
       h("h4", {}, ["1. Kies de stijl van de deur"]),
       h("div", { class: "style-cards" }, C.lines.map(function (l) {
         var info = LINE_INFO[l.id] || { plain: l.name, diff: l.tagline, icon: "🚪" };
-        var rep = REP_FINISH(l);
+        var scFg = fgForLine(l, row); // toon de gekozen kleur i.p.v. een vaste voorbeeldkleur
         return h("button", { class: "style-card" + (row.lineId === l.id ? " sel" : ""), onclick: function () {
-          row.lineId = l.id; var nl = lineById(l.id);
-          if (!hasFinishedGroup(nl)) { row.finishMode = "schilderklaar"; row.finishId = "wit-teverven"; }
-          else { row.finishMode = "afgewerkt"; row.finishId = firstFinishedOf(nl); }
+          row.lineId = l.id; ensureValidFinish(row);
           render();
         } }, [
-          h("div", { class: "sc-door", html: tileDoorSVG(rep.fg, rep.model, l) }, []),
+          h("div", { class: "sc-door", html: tileDoorSVG(scFg, l.id === "steel-look" ? "1r" : "vlak", l) }, []),
           h("div", { class: "sc-txt" }, [
             h("strong", {}, [info.icon + " " + info.plain]),
             h("small", {}, [info.diff]),
@@ -2033,6 +2031,28 @@ window.CATALOG = {
     var fid = map[l.id] || firstFinishedOf(l) || "wit-teverven";
     var fg = finishById(fid) || { finish: { id: "x", name: "", swatch: "#eee", tags: [] } };
     return { fg: fg, model: l.id === "steel-look" ? "1r" : "vlak" };
+  }
+
+  // afwerking om te tonen op een stijl-kaart: neem de GEKOZEN kleur als die
+  // geldig is voor de lijn, anders een geldige voorbeeldafwerking van de lijn
+  function fgForLine(l, row) {
+    // geschilderd op kleur → geldig voor elke lijn met te-verven basis
+    if (row.finishMode === "geschilderd" && l.finishGroups.indexOf("te-verven") >= 0) {
+      var pc = paintColorById(row.paintColor) || C.paintColors[0];
+      return { finish: { id: "paint-" + pc.id, name: pc.name, swatch: pc.swatch, tags: ["mat"] } };
+    }
+    // schilderklaar wit → geldig voor lijnen met te-verven
+    if ((row.finishMode || "afgewerkt") === "schilderklaar" && l.finishGroups.indexOf("te-verven") >= 0) {
+      return { finish: { id: "wit-teverven", name: "Wit", swatch: "#f4f2ec", tags: ["wit"] } };
+    }
+    // afgewerkte kleur → gebruik ze als de lijn ze aanbiedt
+    var f = finishById(row.finishId);
+    if (f && f.group.id !== "te-verven") {
+      var okGroup = l.finishGroups.indexOf(f.group.id) >= 0;
+      var okFilter = !l.finishFilter || l.finishFilter.indexOf(row.finishId) >= 0;
+      if (okGroup && okFilter) return f;
+    }
+    return REP_FINISH(l).fg;
   }
 
   // afwerkingskeuze (foto-tegels) voor één ruimte
