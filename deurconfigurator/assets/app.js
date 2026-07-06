@@ -318,6 +318,9 @@
     } else if (state.view === "gallery") {
       app.appendChild(renderGallery());
       if (stepperEl) stepperEl.style.display = "none";
+    } else if (state.view === "product") {
+      app.appendChild(renderProduct(state.productId));
+      if (stepperEl) stepperEl.style.display = "none";
     } else if (state.view === "guide") {
       app.appendChild(renderGuide());
       if (stepperEl) stepperEl.style.display = "none";
@@ -580,6 +583,41 @@
     trekkend: { name: "Naar binnen (trekkend)", sub: "'Loft' / 'Endless Loft'", desc: "De deur draait naar je toe wanneer je ze opent, de kamer in vanuit de gang.", arc: "in" },
     duwend: { name: "Naar buiten (duwend)", sub: "'Loft Plus' / 'Endless Loft Plus'", desc: "De deur draait van je weg wanneer je ze opent, de kamer uit. Handig bij kleine ruimtes (bv. badkamer).", arc: "out" },
   };
+
+  // Rijke productinfo per lijn — samengevat uit de Group Thys / Living Collection folders
+  var PRODUCT_DETAIL = {
+    "te-verven": {
+      intro: "De voordelige klassieker: een schilderklare deur met een verzorgde, zichtbare deurlijst rondom. Je schildert ze zelf af in de kleur van je keuze — ideaal als je later nog wil bijwerken of exact met je muur wil matchen.",
+      kenmerken: ["Hoogtes 201,5 & 211,5 cm", "Breedtes 63–93 cm", "Kern: honingraat (licht & budget) of tubespaan (dB 32, beste prijs/kwaliteit)", "Wit voorgelakt — 3× aflakken aangeraden voor een strak resultaat", "Modellen: vlak, moderne verticale/horizontale groeven, Line Design en glasdeur"],
+      plaatsing: ["Deurkast breedte = muurdikte + 5 mm", "Plaatsen na bepleistering, in een droge bouw (max 10% muurvocht)", "Scharniergaten voorboren met een 3 mm boor"],
+      klink: "Klinkhoogte 100,75 cm (201,5) · 105,75 cm (211,5)",
+    },
+    "invisible-flat": {
+      intro: "Het vlaggenschip. Een strak deurgeheel waarbij de deurlijst gelijk ligt met de muur — geen uitstekend kader. Verdoken 3D-regelbare scharnieren en een magnetisch slot maken het geheel rustig en tijdloos.",
+      kenmerken: ["Hoogtes 201,5 & 211,5 cm", "Breedtes 63–93 cm", "Deurblad ligt perfect gelijk met de kast", "Kern tubespaan (dB 32, schokvast)", "3 verdoken, 3D-regelbare scharnieren", "Magnetisch slot met volledig verzonken sluitplaat", "Van schilderklaar tot echte houtstructuur, mat, beton of staal-glas"],
+      plaatsing: ["Deurkast breedte = muurdikte + 5 mm (voor gelijkliggende lijst)", "TPE-dichtingsstrip en regelbare afstandsschroeven inbegrepen", "De afstandsschroeven zijn de verankeringspunten — correct plaatsen is een must", "Plaatsen in een droge bouw (max 10% muurvocht)"],
+      klink: "Klinkhoogte 100,75 cm (201,5) · 105,75 cm (211,5)",
+    },
+    "steel-look": {
+      intro: "Industriële staallook met veel glas. Extra smalle profielen van 65 mm gecombineerd met 8 mm veiligheidsglas geven een slanke, eigentijdse uitstraling en laten licht door tussen twee ruimtes.",
+      kenmerken: ["Hoogtes 201,5 & 211,5 cm (op maat 180–231,5 cm)", "8 mm veiligheidsglas: helder, mat of grijs gerookt", "Magnetische sluiting met greep (geen klink)", "Verdoken scharnieren", "Modellen 1R, 3R, 4R, 8R, 2 Line, 3 Line", "Let op: deze deuren zijn NIET inkortbaar"],
+      plaatsing: ["Deurkast breedte = muurdikte + 5 mm", "Plaatsen in een droge bouw (max 10% muurvocht)"],
+      klink: "Greep i.p.v. klink",
+    },
+    "loft": {
+      intro: "Dezelfde strakke, verdoken look als Invisible Flat, maar voor hoge deuren tot 231,5 cm. 'Loft' draait naar binnen (trekkend), 'Loft Plus' naar buiten (duwend).",
+      kenmerken: ["Hoogtes 201,5 / 211,5 / 231,5 cm", "Breedtes 63–93 cm", "Loft = trekkend · Loft Plus = duwend", "Verdoken 3D-regelbare scharnieren", "Magnetisch slot + transparante TPE-dichting", "18 regelbare afstandsschroeven", "Te verven in vochtwerend MDF of volledig afgewerkt"],
+      plaatsing: ["3 plaatsingsmethodes: 'invisible' (3° geschuind, mee bepleisterd), blokkader gelijk of breder dan de muur", "Hoogte deurkast = opening plafond/vloer − 3 mm", "Droge bouw, max 10% muurvocht"],
+      klink: "Klinkhoogte 100,75 / 105,75 / 115,75 cm",
+    },
+    "endless-loft": {
+      intro: "Plafondhoge deuren tot 300 cm, volledig op maat. Zonder deurlijsten — het blok-kader wordt mee bepleisterd en in dezelfde kleur geschilderd voor een naadloos effect. Met zichtbare kruk.",
+      kenmerken: ["Hoogte 237–300 cm, volledig op maat", "Breedtes 73–103 cm", "Trekkend (Loft) of duwend (Loft Plus)", "Verdoken scharnieren + magnetisch slot", "18 bevestigingspunten in de muur", "Te verven of Platina Wit"],
+      plaatsing: ["Blok-kader 28 mm, 2 zijden 3° geschuind — wordt mee met de muur bepleisterd", "Hoogte deur = opening vloer/plafond − 16 mm; kast = opening − 3 mm", "Droge bouw, max 10% muurvocht"],
+      klink: "Klinkhoogte 118,5 cm",
+    },
+  };
+  var BRAND_FACTS = ["🇧🇪 Made in Belgium", "🛡️ 10 jaar garantie", "🌬️ Conform EPB-ventilatienorm", "🔇 Magnetisch slot (stil sluiten)"];
   // architect-tip per ruimtetype (herkend op trefwoord)
   var ROOM_TIPS = [
     { k: /badkamer|bad/i, tip: "Badkamer: kies een vochtbestendige deur en een slot met vrij/bezet-indicatie.", ic: "🚿" },
@@ -1178,7 +1216,7 @@
             h("span", { class: "gal-price" }, ["vanaf " + euro(price)]),
           ]),
         ]),
-        h("div", { class: "gal-cta" }, ["Bekijk & pas aan →"]),
+        h("div", { class: "gal-cta" }, ["Bekijk product →"]),
       ]);
     });
 
@@ -1207,13 +1245,18 @@
     ]);
   }
 
+  // klikken op een product in de galerij → detailpagina (met deze afwerking)
   function openShowcase(sc) {
-    applyShowcase(sc);
-    state.editingUid = null;
-    state.qty = 1;
-    state.view = "config";
-    state.step = 3; // spring naar afwerking zodat men meteen kan aanpassen
+    state.productSc = sc;
+    state.productId = sc.line;
+    state.view = "product";
     render();
+  }
+  // vanaf de detailpagina de configurator starten
+  function configFromShowcase() {
+    if (state.productSc && state.productSc.line === state.productId) applyShowcase(state.productSc);
+    else setLineDefaults(lineById(state.productId));
+    state.editingUid = null; state.qty = 1; state.view = "config"; state.step = 3; render();
   }
 
   /* ---- STAP 0 : intro --------------------------------------------------- */
@@ -1322,6 +1365,7 @@
             line.attrs.maxHeight >= 300 ? h("span", { class: "tag" }, ["tot 300cm"]) :
               line.attrs.maxHeight >= 231 ? h("span", { class: "tag" }, ["tot 231cm"]) : null,
           ]),
+          h("button", { class: "link-btn lc-info", onclick: function (e) { e.stopPropagation(); openProduct(line.id); } }, ["ℹ️ Meer info over deze lijn"]),
         ]),
       ]);
     })));
@@ -2600,6 +2644,101 @@
   /* ====================================================================== *
    *  KEUZEHULP (buying guide) — helpt particulieren kiezen
    * ====================================================================== */
+  /* ====================================================================== *
+   *  PRODUCT-DETAILPAGINA (op basis van de folders)
+   * ====================================================================== */
+  function openProduct(id) { state.productSc = null; state.productId = id; state.view = "product"; render(); }
+
+  // hero-afbeelding voor de detailpagina met een schone, tijdelijke state
+  function productHeroSVG(line) {
+    var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor;
+    setLineDefaults(line);
+    if (state.productSc && state.productSc.line === line.id) applyShowcase(state.productSc);
+    var svg = bigDoorSVG(line, activeFinish(), false);
+    Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
+    return svg;
+  }
+
+  function renderProduct(id) {
+    var line = lineById(id);
+    var info = LINE_INFO[id] || { plain: line.name, diff: line.tagline, icon: "🚪" };
+    var det = PRODUCT_DETAIL[id] || { intro: line.description, kenmerken: [], plaatsing: [], klink: "" };
+    var priceFrom = lowestFrom(line);
+
+    // beschikbare afwerkingen
+    var finishTiles = [];
+    line.finishGroups.forEach(function (gid) {
+      if (gid === "te-verven") return;
+      var grp = C.finishGroups.filter(function (g) { return g.id === gid; })[0];
+      if (!grp) return;
+      grp.finishes.filter(function (f) { return !line.finishFilter || line.finishFilter.indexOf(f.id) >= 0; }).forEach(function (f) {
+        finishTiles.push(h("div", { class: "tile mini" }, [
+          h("div", { class: "tile-door", html: tileDoorSVG({ finish: f }, "vlak", line) }, []),
+          h("span", { class: "tile-name" }, [f.name]),
+        ]));
+      });
+    });
+    if (line.finishGroups.indexOf("te-verven") >= 0) {
+      finishTiles.unshift(h("div", { class: "tile mini" }, [
+        h("div", { class: "tile-door", html: tileDoorSVG({ finish: { id: "wit-teverven", name: "Wit", swatch: "#f4f2ec", tags: ["wit"] } }, "vlak", line) }, []),
+        h("span", { class: "tile-name" }, ["Schilderklaar / op kleur"]),
+      ]));
+    }
+
+    // beslag & accessoires
+    var handleList = C.handles.filter(function (hd) { return hd.id !== "geen" && (line.handleType === "greep" ? hd.type === "greep" : hd.type === "kruk"); });
+
+    return h("div", {}, [
+      h("div", { class: "prod-hero" }, [
+        h("div", { class: "ph-media", html: productHeroSVG(line) }, []),
+        h("div", { class: "ph-body" }, [
+          h("button", { class: "link-btn", onclick: function () { goView("gallery"); } }, ["← Terug naar de deuren"]),
+          h("div", { class: "line-badge" }, [line.badge]),
+          h("h1", {}, [info.icon + " " + line.name]),
+          h("p", { class: "ph-plain" }, [info.plain]),
+          h("p", { class: "ph-intro" }, [det.intro]),
+          h("div", { class: "ph-price" }, ["vanaf ", h("strong", {}, [euro(priceFrom)]), " " + vatLabel()]),
+          h("div", { class: "ph-facts" }, BRAND_FACTS.map(function (f) { return h("span", {}, [f]); })),
+          h("div", { class: "btn-row" }, [
+            h("button", { class: "btn primary lg", onclick: function () { configFromShowcase(); } }, ["Stel deze deur samen →"]),
+          ]),
+        ]),
+      ]),
+
+      h("div", { class: "panel prod-sec" }, [
+        h("h3", {}, ["Kenmerken"]),
+        h("ul", { class: "prod-list" }, det.kenmerken.map(function (x) { return h("li", {}, [x]); })),
+        det.klink ? h("p", { class: "prod-klink" }, ["📐 " + det.klink]) : null,
+      ]),
+
+      h("div", { class: "panel prod-sec" }, [renderIncluded(id)]),
+
+      finishTiles.length ? h("div", { class: "panel prod-sec" }, [
+        h("h3", {}, ["Beschikbare afwerkingen"]),
+        h("p", { class: "sub" }, ["Een greep uit de mogelijkheden — de volledige keuze zie je in de configurator."]),
+        h("div", { class: "tile-grid" }, finishTiles),
+      ]) : null,
+
+      h("div", { class: "panel prod-sec" }, [
+        h("h3", {}, ["Plaatsing & techniek"]),
+        h("ul", { class: "prod-list" }, det.plaatsing.map(function (x) { return h("li", {}, [x]); })),
+        h("p", { class: "sub" }, ["Volledige plaatsingsvideo's en instructies: www.groupthys.com"]),
+      ]),
+
+      h("div", { class: "panel prod-sec" }, [
+        h("h3", {}, ["Beslag & accessoires"]),
+        h("div", { class: "acc-grid" }, [
+          h("div", {}, [h("h4", {}, ["Slot"]), h("ul", { class: "prod-list" }, C.locks.map(function (l) { return h("li", {}, [l.name + (l.extra ? " (+" + euro(l.extra) + ")" : " — inbegrepen")]); }))]),
+          h("div", {}, [h("h4", {}, [line.handleType === "greep" ? "Grepen" : "Krukken"]), h("ul", { class: "prod-list" }, handleList.slice(0, 6).map(function (hd) { return h("li", {}, [hd.name + (hd.price ? " (+" + euro(hd.price) + ")" : "")]); }))]),
+        ]),
+      ]),
+
+      h("div", { class: "prod-cta" }, [
+        h("button", { class: "btn primary lg", onclick: function () { configFromShowcase(); } }, ["Stel je " + line.name + " samen →"]),
+      ]),
+    ]);
+  }
+
   function renderGuide() {
     var kids = [
       h("div", { class: "guide-hero" }, [

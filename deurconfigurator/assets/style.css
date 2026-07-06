@@ -671,6 +671,33 @@ h3 { font-size: 16px; margin: 0 0 10px; }
   .ci-right { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; }
 }
 
+/* ===== productdetailpagina ===== */
+.prod-hero { display: grid; grid-template-columns: 340px 1fr; gap: 24px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); padding: 24px; margin-bottom: 18px; align-items: center; }
+.ph-media { background: linear-gradient(160deg,#f4f1eb,#e7e2d7); border-radius: 16px; padding: 12px 26px; }
+.ph-media svg { width: 100%; height: auto; max-height: 380px; display: block; }
+.ph-body h1 { font-size: 30px; margin: 8px 0 4px; }
+.ph-plain { color: var(--teal); font-weight: 700; font-size: 16px; margin: 0 0 8px; }
+.ph-intro { color: var(--muted); font-size: 15px; line-height: 1.6; margin: 0 0 14px; max-width: 60ch; }
+.ph-price { font-size: 16px; margin-bottom: 12px; }
+.ph-price strong { font-size: 22px; color: var(--teal-d); }
+.ph-facts { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.ph-facts span { font-size: 12.5px; font-weight: 600; background: var(--bg-2); padding: 6px 11px; border-radius: 999px; }
+.prod-sec { margin-bottom: 16px; padding: 24px; }
+.prod-list { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.prod-list li { position: relative; padding-left: 22px; font-size: 14.5px; }
+.prod-list li::before { content: "✓"; position: absolute; left: 0; color: var(--lime); font-weight: 800; }
+.prod-klink { margin-top: 12px; font-weight: 600; color: var(--teal-d); }
+.acc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.acc-grid h4 { margin: 0 0 8px; }
+.tile.mini .tile-door svg { border-radius: 6px; }
+.prod-cta { text-align: center; margin: 8px 0 10px; }
+@media (max-width: 760px) {
+  .prod-hero { grid-template-columns: 1fr; padding: 16px; }
+  .ph-media { max-width: 260px; margin: 0 auto; }
+  .ph-body h1 { font-size: 24px; }
+  .acc-grid { grid-template-columns: 1fr; }
+}
+
 /* ===== 3D-deur render ===== */
 .prev-toggle { display: flex; gap: 4px; background: var(--bg-2); padding: 4px; border-radius: 999px; width: max-content; margin: 0 auto 10px; }
 .pt-btn { font: inherit; font-size: 12.5px; font-weight: 700; border: none; background: transparent; color: var(--muted); padding: 6px 16px; border-radius: 999px; cursor: pointer; }
