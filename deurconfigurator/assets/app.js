@@ -528,12 +528,37 @@
     ] },
   ];
 
+  // uitleg per productlijn in gewone taal (voor klanten zonder kennis)
+  var LINE_INFO = {
+    "te-verven": { plain: "Klassieke schilderdeur", diff: "Met een zichtbare houten omlijsting (deurlijst) rond de deur. Je schildert ze zelf in je kleur. De voordeligste keuze.", icon: "🖌️" },
+    "invisible-flat": { plain: "Strak, zonder zichtbaar kader", diff: "De omlijsting ligt gelijk met de muur — geen uitstekend kader. Modern en tijdloos. Kant-en-klaar of geschilderd.", icon: "⬜" },
+    "steel-look": { plain: "Glasdeur met zwarte staal-look", diff: "Veel glas met fijne zwarte profielen. Laat licht door tussen twee ruimtes. Industriële, open look.", icon: "🏭" },
+    "loft": { plain: "Hoge deur (tot 231 cm)", diff: "Dezelfde strakke look als 'zonder kader', maar hoger dan een standaarddeur. Geeft ruimte en allure.", icon: "📏" },
+    "endless-loft": { plain: "Plafondhoge deur (tot 300 cm)", diff: "Loopt tot tegen het plafond — een luxe, naadloos effect. Volledig op maat.", icon: "🏛️" },
+  };
+  // architect-tip per ruimtetype (herkend op trefwoord)
+  var ROOM_TIPS = [
+    { k: /badkamer|bad/i, tip: "Badkamer: kies een vochtbestendige deur en een slot met vrij/bezet-indicatie.", ic: "🚿" },
+    { k: /toilet|wc/i, tip: "Toilet: een WC-slot (vrij/bezet) is handig; een smallere deur (63 cm) volstaat meestal.", ic: "🚽" },
+    { k: /slaapkamer|bedroom|master/i, tip: "Slaapkamer: geluidsdemping is fijn. Een cilinderslot geeft privacy.", ic: "🛏️" },
+    { k: /bureau|office/i, tip: "Bureau: een dichte, geluidsdempende deur helpt bij thuiswerk. Cilinderslot voor privacy.", ic: "💼" },
+    { k: /berging|techniek|wasplaats|garage/i, tip: "Bergruimte: functioneel volstaat; hier kan je besparen met een schilderklare deur.", ic: "🧰" },
+    { k: /leefruimte|living|woon|keuken|eet/i, tip: "Leefruimte: hier valt je deur het meest op — kies gerust een mooie afwerking of glas voor lichtinval.", ic: "🛋️" },
+    { k: /inkom|hal|nacht/i, tip: "Hal/inkom: een strakke, neutrale afwerking oogt het rustigst.", ic: "🚪" },
+    { k: /dressing|kleedkamer/i, tip: "Dressing: laat gerust aansluiten bij de slaapkamer voor een rustig geheel.", ic: "👕" },
+  ];
+  function roomTip(name) {
+    for (var i = 0; i < ROOM_TIPS.length; i++) if (ROOM_TIPS[i].k.test(name || "")) return ROOM_TIPS[i];
+    return { tip: "Kies de afwerking die past bij deze ruimte.", ic: "🚪" };
+  }
+
   function renderBouw() {
     var bw = state.bouw;
+    if (bw.walk) return renderRoomWalk();
     var kids = [
       h("div", { class: "guide-hero" }, [
         h("h2", {}, ["Bouwselector"]),
-        h("p", { class: "lead" }, ["Upload je bouwplan en bepaal in enkele stappen alle deuren voor je project. Perfect voor nieuwbouw of een volledige renovatie — je bestelt alles in één keer."]),
+        h("p", { class: "lead" }, ["Upload je bouwplan en we overlopen samen je woning — ruimte per ruimte, met foto's en uitleg. Je bestelt alles in één keer."]),
       ]),
     ];
 
@@ -574,29 +599,228 @@
       h("button", { class: "btn ghost", onclick: function () { bw.rows.push({ room: "Nieuwe ruimte", qty: 1, width: 83, height: 201.5 }); render(); } }, ["+ Deur toevoegen"]),
     ]));
 
-    // 4. afwerking voor het project
+    // 4. kies je aanpak
+    var totDoors = bw.rows.reduce(function (n, r) { return n + (+r.qty || 0); }, 0);
     kids.push(h("section", { class: "guide-sec" }, [
-      h("h3", {}, ["4. Afwerking voor het hele project"]),
-      h("p", { class: "gs-intro" }, ["Kies één stijl voor alle deuren. Individuele deuren pas je nadien nog aan in je winkelmandje."]),
-      renderBouwFinish(),
+      h("h3", {}, ["4. Hoe wil je de afwerking kiezen?"]),
+      totDoors ? h("div", { class: "approach-grid" }, [
+        h("button", { class: "approach-card feature", onclick: startWalk }, [
+          h("span", { class: "ap-ic" }, ["🏛️"]),
+          h("strong", {}, ["Overloop elke ruimte (aanrader)"]),
+          h("small", {}, ["We tonen per ruimte foto's en leggen het verschil uit. Jij kiest per ruimte de stijl, kleur en het aantal."]),
+          h("span", { class: "sc-go" }, ["Start de rondgang →"]),
+        ]),
+        h("button", { class: "approach-card", onclick: function () { bw.quick = true; render(); } }, [
+          h("span", { class: "ap-ic" }, ["⚡"]),
+          h("strong", {}, ["Zelfde stijl voor alles"]),
+          h("small", {}, ["Snel klaar: één afwerking voor alle deuren. Later per deur aanpasbaar."]),
+        ]),
+      ]) : h("p", { class: "gs-intro" }, ["Kies eerst een woningtype of voeg deuren toe."]),
+      bw.quick ? h("div", { class: "quick-finish" }, [renderBouwFinish()]) : null,
     ]));
 
-    // 5. samenvatting + toevoegen
-    var totDoors = bw.rows.reduce(function (n, r) { return n + (+r.qty || 0); }, 0);
-    var estTotal = bouwEstimate();
-    kids.push(h("section", { class: "guide-sec bouw-foot" }, [
-      h("div", { class: "bouw-summary" }, [
-        h("div", {}, [h("strong", {}, [totDoors + " deuren"]), h("br"), h("small", {}, [bw.rows.length + " ruimtes"])]),
-        h("div", { class: "bs-total" }, [h("span", {}, ["Geschat totaal " + vatLabel()]), h("strong", {}, [euro(estTotal)])]),
-      ]),
-      h("div", { class: "btn-row" }, [
-        h("button", { class: "btn ghost", onclick: function () { goView("start"); } }, ["← Terug"]),
-        h("button", { class: "btn primary lg", onclick: addProjectToCart, disabled: totDoors ? null : "disabled" }, ["Alle " + totDoors + " deuren in winkelmandje →"]),
-      ]),
-      h("p", { class: "disclaimer" }, ["Richtprijs op basis van je keuzes. Upload en aantallen zijn indicatief; onze mensen controleren je plan en bevestigen de definitieve maten."]),
-    ]));
+    // 5. samenvatting (enkel bij snelle modus)
+    if (bw.quick && totDoors) {
+      var estTotal = bouwEstimate();
+      kids.push(h("section", { class: "guide-sec bouw-foot" }, [
+        h("div", { class: "bouw-summary" }, [
+          h("div", {}, [h("strong", {}, [totDoors + " deuren"]), h("br"), h("small", {}, [bw.rows.length + " ruimtes"])]),
+          h("div", { class: "bs-total" }, [h("span", {}, ["Geschat totaal " + vatLabel()]), h("strong", {}, [euro(estTotal)])]),
+        ]),
+        h("div", { class: "btn-row" }, [
+          h("button", { class: "btn ghost", onclick: function () { goView("start"); } }, ["← Terug"]),
+          h("button", { class: "btn primary lg", onclick: addProjectToCart }, ["Alle " + totDoors + " deuren in winkelmandje →"]),
+        ]),
+        h("p", { class: "disclaimer" }, ["Richtprijs op basis van je keuzes. Onze mensen controleren je plan en bevestigen de definitieve maten."]),
+      ]));
+    }
 
     return card("guide", kids);
+  }
+
+  /* ---- ruimte per ruimte: architect-rondgang --------------------------- */
+  function startWalk() {
+    var bw = state.bouw;
+    bw.rows.forEach(function (r) {
+      if (!r.lineId) { r.lineId = bw.lineId; r.finishMode = bw.finishMode; r.finishId = bw.finishId; r.paintColor = bw.paintColor; }
+    });
+    bw.walk = true; bw.idx = 0; render();
+  }
+  function applyRowToState(r) {
+    var bw = state.bouw;
+    var line = lineById(r.lineId || bw.lineId);
+    setLineDefaults(line);
+    state.finishMode = r.finishMode || bw.finishMode || "afgewerkt";
+    state.finishId = r.finishId || bw.finishId || firstFinishedOf(line) || "wit-teverven";
+    state.paintColor = r.paintColor || bw.paintColor || "ral9010";
+    state.modelId = "vlak";
+    state.height = line.customHeight ? null : nearest(line.heights, r.height);
+    state.customHeight = line.customHeight ? Math.max(line.customHeight.min, Math.min(line.customHeight.max, r.height)) : null;
+    state.width = nearest(line.widths, r.width);
+    if (line.glassOptions) state.glassId = line.glassOptions[0].id;
+    return line;
+  }
+
+  function renderRoomWalk() {
+    var bw = state.bouw, idx = bw.idx, row = bw.rows[idx], total = bw.rows.length;
+    var line = applyRowToState(row);
+    var fg = activeFinish();
+    var tip = roomTip(row.room);
+    var unit = calcUnit(line);
+
+    var kids = [
+      // voortgang
+      h("div", { class: "walk-top" }, [
+        h("button", { class: "link-btn", onclick: function () { bw.walk = false; render(); } }, ["✕ Rondgang sluiten"]),
+        h("div", { class: "walk-prog" }, [
+          h("div", { class: "wp-bar" }, [h("i", { style: "width:" + ((idx + 1) / total * 100) + "%" }, [])]),
+          h("span", {}, ["Ruimte " + (idx + 1) + " van " + total]),
+        ]),
+      ]),
+      h("div", { class: "walk-head" }, [
+        h("input", { class: "walk-room", type: "text", value: row.room, oninput: function (e) { row.room = e.target.value; } }, []),
+        h("div", { class: "walk-tip" }, [h("span", { class: "wt-ic" }, [tip.ic]), tip.tip]),
+      ]),
+    ];
+
+    // twee kolommen: preview + keuzes
+    var controls = [];
+
+    // stijl (met uitleg + foto's)
+    controls.push(h("div", { class: "walk-block" }, [
+      h("h4", {}, ["1. Kies de stijl van de deur"]),
+      h("div", { class: "style-cards" }, C.lines.map(function (l) {
+        var info = LINE_INFO[l.id] || { plain: l.name, diff: l.tagline, icon: "🚪" };
+        var rep = REP_FINISH(l);
+        return h("button", { class: "style-card" + (row.lineId === l.id ? " sel" : ""), onclick: function () {
+          row.lineId = l.id; var nl = lineById(l.id);
+          if (!hasFinishedGroup(nl)) { row.finishMode = "schilderklaar"; row.finishId = "wit-teverven"; }
+          else { row.finishMode = "afgewerkt"; row.finishId = firstFinishedOf(nl); }
+          render();
+        } }, [
+          h("div", { class: "sc-door", html: tileDoorSVG(rep.fg, rep.model, l) }, []),
+          h("div", { class: "sc-txt" }, [
+            h("strong", {}, [info.icon + " " + info.plain]),
+            h("small", {}, [info.diff]),
+            h("span", { class: "sc-from" }, ["vanaf " + euro(lowestFrom(l))]),
+          ]),
+        ]);
+      })),
+    ]));
+
+    // kleur / afwerking (foto's)
+    controls.push(h("div", { class: "walk-block" }, [
+      h("h4", {}, ["2. Kies de kleur / afwerking"]),
+      renderRoomFinish(row, line),
+    ]));
+
+    // aantal + maat
+    controls.push(h("div", { class: "walk-block" }, [
+      h("h4", {}, ["3. Aantal en maat voor deze ruimte"]),
+      h("div", { class: "walk-nums" }, [
+        h("div", { class: "wn-field" }, [h("label", {}, ["Aantal deuren"]),
+          h("div", { class: "mini-step big" }, [
+            h("button", { onclick: function () { row.qty = Math.max(1, (+row.qty || 1) - 1); render(); } }, ["−"]),
+            h("span", {}, [String(row.qty)]),
+            h("button", { onclick: function () { row.qty = (+row.qty || 1) + 1; render(); } }, ["+"]),
+          ])]),
+        h("div", { class: "wn-field" }, [h("label", {}, ["Breedte"]),
+          h("select", { onchange: function (e) { row.width = +e.target.value; render(); } },
+            line.widths.map(function (w) { return h("option", { value: w, selected: nearest(line.widths, row.width) === w ? "selected" : null }, [w + " cm"]); }))]),
+        h("div", { class: "wn-field" }, [h("label", {}, ["Hoogte"]),
+          h("select", { onchange: function (e) { row.height = +e.target.value; render(); } },
+            (line.heights || [201.5, 211.5, 231.5]).map(function (ht) { return h("option", { value: ht, selected: row.height === ht ? "selected" : null }, [String(ht).replace(".", ",") + " cm"]); }))]),
+      ]),
+      h("button", { class: "link-btn", onclick: function () { applyToRest(idx); toast("Toegepast op volgende ruimtes"); } }, ["↓ Deze stijl & kleur op alle volgende ruimtes toepassen"]),
+    ]));
+
+    var body = h("div", { class: "walk-layout" }, [
+      h("aside", { class: "walk-preview" }, [
+        h("div", { class: "preview-door", html: bigDoorSVG(line, fg, false) }, []),
+        h("div", { class: "preview-info" }, [
+          h("div", { class: "pi-line" }, [(LINE_INFO[row.lineId] || {}).plain || line.name]),
+          h("div", { class: "pi-finish" }, [fg ? fg.finish.name : ""]),
+          h("div", { class: "pi-meta" }, [row.qty + "× · " + row.width + "×" + row.height + " cm"]),
+          h("div", { class: "pi-price" }, [
+            h("span", { class: "pip-val" }, [euro(unit * row.qty)]),
+            h("span", { class: "pip-lbl" }, [row.qty + " deur(en) " + vatLabel()]),
+          ]),
+        ]),
+      ]),
+      h("div", { class: "walk-controls" }, controls),
+    ]);
+    kids.push(body);
+
+    // navigatie
+    kids.push(h("div", { class: "walk-nav" }, [
+      idx > 0 ? h("button", { class: "btn ghost", onclick: function () { bw.idx--; render(); } }, ["← Vorige ruimte"]) : h("span", {}, []),
+      h("div", { class: "walk-run" }, ["Lopend totaal: ", h("strong", {}, [euro(bouwEstimate())])]),
+      idx < total - 1
+        ? h("button", { class: "btn primary", onclick: function () { bw.idx++; render(); } }, ["Volgende ruimte →"])
+        : h("button", { class: "btn primary lg", onclick: function () { bw.walk = false; addProjectToCart(); } }, ["✓ Klaar — alles in winkelmandje"]),
+    ]));
+
+    return card("guide walk", kids);
+  }
+
+  // representatieve afwerking + model voor een lijn (voor stijl-thumbnail)
+  function REP_FINISH(l) {
+    var map = { "te-verven": "wit-teverven", "invisible-flat": "nature-oak", "steel-look": "black-mat", "loft": "nature-oak", "endless-loft": "wit-teverven" };
+    var fid = map[l.id] || firstFinishedOf(l) || "wit-teverven";
+    var fg = finishById(fid) || { finish: { id: "x", name: "", swatch: "#eee", tags: [] } };
+    return { fg: fg, model: l.id === "steel-look" ? "1r" : "vlak" };
+  }
+
+  // afwerkingskeuze (foto-tegels) voor één ruimte
+  function renderRoomFinish(row, line) {
+    var modes = lineModes(line);
+    var wrap = [];
+    // moduskeuze indien relevant (kant-en-klaar / schilderklaar / geschilderd)
+    if (modes.length > 1) {
+      var labels = { afgewerkt: "Kant-en-klaar", schilderklaar: "Zelf schilderen", geschilderd: "Wij schilderen (op kleur)" };
+      wrap.push(h("div", { class: "mode-pills" }, modes.map(function (mid) {
+        return h("button", { class: "mode-pill" + (row.finishMode === mid ? " sel" : ""), onclick: function () {
+          row.finishMode = mid; if (mid === "afgewerkt") row.finishId = firstFinishedOf(line); else row.finishId = "wit-teverven"; render();
+        } }, [labels[mid]]);
+      })));
+    }
+    var tiles = [];
+    if ((row.finishMode || "afgewerkt") === "afgewerkt") {
+      line.finishGroups.forEach(function (gid) {
+        if (gid === "te-verven") return;
+        var grp = C.finishGroups.filter(function (g) { return g.id === gid; })[0];
+        if (!grp) return;
+        grp.finishes.filter(function (f) { return !line.finishFilter || line.finishFilter.indexOf(f.id) >= 0; }).forEach(function (f) {
+          tiles.push(finishTile(f.id, f.name, { finish: f }, row, line));
+        });
+      });
+    } else if (row.finishMode === "geschilderd") {
+      C.paintColors.forEach(function (pc) {
+        tiles.push(finishTile("paint-" + pc.id, pc.name, { finish: { id: "paint-" + pc.id, name: pc.name, swatch: pc.swatch, tags: ["mat"] } }, row, line, pc.id));
+      });
+    } else {
+      tiles.push(h("p", { class: "gs-intro" }, ["Je ontvangt een wit voorgelakte deur die je zelf schildert."]));
+    }
+    return h("div", {}, wrap.concat([h("div", { class: "tile-grid" }, tiles)]));
+  }
+  function finishTile(id, name, fgObj, row, line, paintId) {
+    var sel = paintId ? (row.finishMode === "geschilderd" && row.paintColor === paintId) : (row.finishMode !== "geschilderd" && row.finishId === id);
+    return h("button", { class: "tile" + (sel ? " sel" : ""), onclick: function () {
+      if (paintId) { row.finishMode = "geschilderd"; row.paintColor = paintId; }
+      else { row.finishMode = row.finishMode === "geschilderd" ? "afgewerkt" : row.finishMode; row.finishId = id; }
+      render();
+    } }, [
+      h("div", { class: "tile-door", html: tileDoorSVG(fgObj, "vlak", line) }, []),
+      h("span", { class: "tile-name" }, [name]),
+    ]);
+  }
+  function applyToRest(idx) {
+    var bw = state.bouw, src = bw.rows[idx];
+    for (var i = idx + 1; i < bw.rows.length; i++) {
+      bw.rows[i].lineId = src.lineId; bw.rows[i].finishMode = src.finishMode;
+      bw.rows[i].finishId = src.finishId; bw.rows[i].paintColor = src.paintColor;
+    }
+    render();
   }
 
   function renderDoorRows() {
@@ -673,35 +897,24 @@
 
   // schatting projecttotaal
   function bouwEstimate() {
-    var bw = state.bouw, line = lineById(bw.lineId), total = 0;
+    var bw = state.bouw, total = 0;
     var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor;
     bw.rows.forEach(function (r) {
-      applyBouwToState(r);
+      var line = applyRowToState(r);
       total += calcUnit(line) * (+r.qty || 0);
     });
     Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
     return total;
   }
-  function applyBouwToState(r) {
-    var bw = state.bouw, line = lineById(bw.lineId);
-    setLineDefaults(line);
-    state.finishMode = bw.finishMode; state.finishId = bw.finishId; state.paintColor = bw.paintColor;
-    state.modelId = "vlak";
-    // dichtste geldige hoogte/breedte voor de lijn
-    state.height = line.customHeight ? null : nearest(line.heights, r.height);
-    state.customHeight = line.customHeight ? Math.max(line.customHeight.min, Math.min(line.customHeight.max, r.height * 10 > 300 ? r.height : r.height)) : null;
-    state.width = nearest(line.widths, r.width);
-    if (line.glassOptions) state.glassId = line.glassOptions[0].id;
-  }
   function nearest(arr, v) { return arr.reduce(function (a, b) { return Math.abs(b - v) < Math.abs(a - v) ? b : a; }); }
 
   function addProjectToCart() {
-    var bw = state.bouw, line = lineById(bw.lineId);
+    var bw = state.bouw;
     if (!bw.rows.length) return;
     var saved = snapshotConfig(); saved.finishMode = state.finishMode; saved.paintColor = state.paintColor; saved.qty = state.qty;
     bw.rows.forEach(function (r) {
       if (!(+r.qty)) return;
-      applyBouwToState(r);
+      var line = applyRowToState(r);
       var fg = activeFinish();
       state.cart.push({
         uid: uid(), label: (r.room ? r.room + " · " : "") + currentItemLabel(line, fg),
@@ -711,6 +924,7 @@
     });
     Object.keys(saved).forEach(function (k) { state[k] = saved[k]; });
     state.editingUid = null;
+    bw.walk = false; bw.quick = false;
     toast(bw.rows.reduce(function (n, r) { return n + (+r.qty || 0); }, 0) + " deuren toegevoegd");
     goView("cart");
   }
