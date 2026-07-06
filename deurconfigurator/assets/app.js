@@ -550,6 +550,36 @@
     "loft": { plain: "Hoge deur (tot 231 cm)", diff: "Dezelfde strakke look als 'zonder kader', maar hoger dan een standaarddeur. Geeft ruimte en allure.", icon: "📏" },
     "endless-loft": { plain: "Plafondhoge deur (tot 300 cm)", diff: "Loopt tot tegen het plafond — een luxe, naadloos effect. Volledig op maat.", icon: "🏛️" },
   };
+
+  // WAT IS INBEGREPEN per productlijn (gecontroleerd tegen de folders)
+  var INCLUDED = {
+    "te-verven": {
+      incl: ["Deurblad (wit voorgelakt)", "Deurkast MÉT zichtbare deurlijsten", "Magnetisch slot met baardsleutel (inox-look)", "Verdoken scharnieren", "2× scharnier­versterkingsblokje", "3× listel"],
+      excl: ["Zelf te schilderen", "Deurkruk apart te kiezen"],
+    },
+    "invisible-flat": {
+      incl: ["Plaatsklaar deurblad (ligt gelijk met de kast)", "Plaatsklare deurkast ZONDER zichtbare lijsten", "Magnetisch slot met baardsleutel", "Verdoken scharnieren (regelbaar)", "TPE-dichtingsstrip", "Regelbare afstandsschroeven", "Scharnier­versterkingsblokje + slaglat"],
+      excl: ["Deurkruk apart te kiezen (zichtbare kruk)"],
+    },
+    "steel-look": {
+      incl: ["Plaatsklaar glasdeurblad met 8 mm veiligheidsglas", "Plaatsklare deurkast (verdoken)", "Magnetische sluiting", "Verdoken scharnieren", "Afstandsschroeven"],
+      excl: ["Greep i.p.v. klink (apart te kiezen)", "Deur is NIET inkortbaar"],
+    },
+    "loft": {
+      incl: ["Plaatsklaar deurblad (hoog, tot 231,5 cm)", "Plaatsklare deurkast (verdoken, zonder lijsten)", "Magnetisch slot met baardsleutel", "Verdoken scharnieren", "TPE-dichtingsstrip", "18 regelbare afstandsschroeven"],
+      excl: ["Deurkruk apart te kiezen"],
+    },
+    "endless-loft": {
+      incl: ["Deurblad op maat (tot 300 cm hoog)", "Deurkast op maat ZONDER deurlijsten", "Magnetisch slot met baardsleutel", "Verdoken scharnieren", "18 regelbare afstandsschroeven"],
+      excl: ["Deurkruk apart te kiezen", "Blok-kader wordt mee bepleisterd/geschilderd"],
+    },
+  };
+
+  // Loft vs Loft Plus (en algemeen trekkend/duwend) — het verschil in draairichting
+  var SWING_INFO = {
+    trekkend: { name: "Naar binnen (trekkend)", sub: "'Loft' / 'Endless Loft'", desc: "De deur draait naar je toe wanneer je ze opent, de kamer in vanuit de gang.", arc: "in" },
+    duwend: { name: "Naar buiten (duwend)", sub: "'Loft Plus' / 'Endless Loft Plus'", desc: "De deur draait van je weg wanneer je ze opent, de kamer uit. Handig bij kleine ruimtes (bv. badkamer).", arc: "out" },
+  };
   // architect-tip per ruimtetype (herkend op trefwoord)
   var ROOM_TIPS = [
     { k: /badkamer|bad/i, tip: "Badkamer: kies een vochtbestendige deur en een slot met vrij/bezet-indicatie.", ic: "🚿" },
@@ -734,6 +764,7 @@
     if (r.lockColor) state.lockColor = r.lockColor;
     if (r.handleId) state.handleId = r.handleId;
     if (r.extras) state.extras = r.extras;
+    if (line.swings) state.swing = r.swing || "trekkend";
     return line;
   }
 
@@ -841,6 +872,17 @@
       ]),
       h("p", { class: "acc-note" }, ["Extra toebehoren (voegband, montageschuim …) en fijne aanpassingen kies je per deur in het winkelmandje — alles blijft nadien wijzigbaar."]),
     ]));
+
+    // draairichting voor hoge deuren (Loft / Loft Plus)
+    if (line.swings) {
+      controls.push(h("div", { class: "walk-block" }, [
+        h("h4", {}, ["5. Draairichting (" + line.name.split(" / ").join(" / ") + ")"]),
+        renderSwingCompare(line, row.swing || "trekkend", function (id) { row.swing = id; render(); }),
+      ]));
+    }
+
+    // bevestig wat inbegrepen is
+    controls.push(h("div", { class: "walk-block" }, [renderIncluded(line.id, true)]));
 
     var body = h("div", { class: "walk-layout" }, [
       h("aside", { class: "walk-preview" }, [
@@ -1443,15 +1485,19 @@
   /* ---- STAP 4 : model + glas ------------------------------------------- */
   function renderModel() {
     var line = lineById(state.lineId);
-    var kids = [h("h2", {}, ["Kies je deurmodel"])];
+    var fgNow = activeFinish();
+    var kids = [
+      h("h2", {}, ["Kies je deurmodel"]),
+      h("p", { class: "sub" }, ["Het model is de indeling van het deurblad. Hieronder zie je meteen het verschil — met jouw gekozen afwerking."]),
+    ];
 
-    kids.push(h("div", { class: "model-grid" }, line.models.map(function (mid) {
+    kids.push(h("div", { class: "model-grid photo" }, line.models.map(function (mid) {
       var m = C.models[mid];
       return h("button", {
         class: "model-card" + (state.modelId === mid ? " sel" : ""),
         onclick: function () { state.modelId = mid; render(); },
       }, [
-        h("div", { class: "model-prev" }, [miniDoor(m)]),
+        h("div", { class: "model-photo", html: tileDoorSVG(fgNow, mid, line) }, []),
         h("strong", {}, [m.name]),
         h("small", {}, [m.desc]),
       ]);
@@ -1460,15 +1506,19 @@
     // glasoptie voor steel look
     if (line.glassOptions) {
       kids.push(h("div", { class: "q-block" }, [
-        h("h3", {}, ["Glassoort"]),
+        h("h3", {}, ["Glassoort — wat is het verschil?"]),
         h("div", { class: "opt-grid" }, line.glassOptions.map(function (g) {
+          var gd = { helder: "Doorzichtig glas — maximale lichtinval.", mat: "Melkglas — laat licht door maar niet doorkijkbaar (privacy).", grijs: "Getint grijs glas — sfeervol en discreet." };
           return h("button", {
             class: "opt" + (state.glassId === g.id ? " sel" : ""),
             onclick: function () { state.glassId = g.id; render(); },
-          }, [g.name + (g.extra ? " (+" + euro(g.extra) + ")" : "")]);
+          }, [h("strong", {}, [g.name + (g.extra ? " (+" + euro(g.extra) + ")" : "")]), h("br"), h("small", {}, [gd[g.id] || ""])]);
         })),
       ]));
     }
+
+    // bevestig wat inbegrepen is
+    kids.push(renderIncluded(line.id));
 
     kids.push(btnRow([backBtn(), nextBtn("Volgende →", function () { state.step = 5; render(); })]));
     return card("", kids);
@@ -1541,16 +1591,12 @@
       })),
     ]));
 
-    // draairichting swing (loft/endless)
+    // draairichting swing (Loft vs Loft Plus) — met uitleg + diagrammen
     if (line.swings) {
       kids.push(h("div", { class: "q-block" }, [
-        h("h3", {}, ["Draairichting"]),
-        h("div", { class: "opt-grid" }, line.swings.map(function (s) {
-          return h("button", {
-            class: "opt" + (state.swing === s.id ? " sel" : ""),
-            onclick: function () { state.swing = s.id; render(); },
-          }, [s.name]);
-        })),
+        h("h3", {}, ["Draairichting — het verschil tussen " + line.name.split(" / ").join(" en ")]),
+        h("p", { class: "sub" }, ['"Loft" opent naar binnen (trekkend), "Loft Plus" opent naar buiten (duwend). Kies wat past bij de ruimte.']),
+        renderSwingCompare(line, state.swing, function (id) { state.swing = id; render(); }),
       ]));
     }
 
@@ -1683,6 +1729,9 @@
         specRow("Aantal", state.qty + " stuk(s)"),
       ]),
     ]));
+
+    // bevestig wat inbegrepen is
+    kids.push(renderIncluded(line.id));
 
     // prijsopbouw
     var totalIncl = calcTotal(line);
@@ -2009,6 +2058,53 @@
     s += '<circle cx="' + (dx + dw - 8) + '" cy="' + (dy + dh / 2) + '" r="2.5" fill="' + (isDark ? "#ddd" : "#8a8378") + '"/>';
     s += "</svg>";
     return s;
+  }
+
+  // "Inbegrepen bij deze deur"-box (bevestigt scharnieren, kader, slot …)
+  function renderIncluded(lineId, compact) {
+    var inf = INCLUDED[lineId]; if (!inf) return h("span", {}, []);
+    return h("div", { class: "incl-box" + (compact ? " compact" : "") }, [
+      h("div", { class: "incl-head" }, ["✓ Inbegrepen bij deze deur"]),
+      h("ul", { class: "incl-list" }, inf.incl.map(function (x) { return h("li", {}, [x]); })),
+      inf.excl && inf.excl.length ? h("div", { class: "incl-note" }, [
+        h("strong", {}, ["Let op: "]), inf.excl.join(" · "),
+      ]) : null,
+    ]);
+  }
+
+  // draairichting-diagram (deur + scharnierpaal + open-arc)
+  function swingSVG(arc, hingeLeft) {
+    var hx = hingeLeft ? 16 : 104;
+    var s = '<svg viewBox="0 0 120 92" class="swing-svg">';
+    s += '<rect x="4" y="78" width="112" height="6" fill="#e6e1d7"/>'; // vloer
+    s += '<rect x="' + (hx - 2) + '" y="18" width="4" height="60" fill="#17615f"/>'; // scharnierpaal
+    // deur in open stand
+    var dir = arc === "out" ? 1 : -1;
+    var ang = hingeLeft ? (arc === "out" ? 35 : -35) : (arc === "out" ? -35 : 35);
+    s += '<g transform="rotate(' + ang + ' ' + hx + ' 20)">';
+    s += '<rect x="' + hx + '" y="16" width="58" height="8" rx="2" fill="url(#swg)"/>';
+    s += '</g>';
+    // open-boog
+    var r = 56;
+    s += '<path d="M' + hx + ',20 A' + r + ' ' + r + ' 0 0 ' + (arc === "out" ? (hingeLeft ? 1 : 0) : (hingeLeft ? 0 : 1)) + ' ' + (hx + dir * 0) + ',' + (20 + r) + '" fill="none" stroke="#c9c4ba" stroke-dasharray="3 3"/>';
+    s += '<defs><linearGradient id="swg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c49a5f"/><stop offset="1" stop-color="#a9803f"/></linearGradient></defs>';
+    s += "</svg>";
+    return s;
+  }
+
+  // vergelijking Loft vs Loft Plus (of algemeen trekkend/duwend)
+  function renderSwingCompare(line, selected, onPick) {
+    return h("div", { class: "swing-compare" }, line.swings.map(function (sw) {
+      var info = SWING_INFO[sw.id] || { name: sw.name, desc: "", arc: "in" };
+      return h("button", { class: "swingc-card" + (selected === sw.id ? " sel" : ""), onclick: function () { onPick(sw.id); } }, [
+        h("div", { class: "swc-fig", html: swingSVG(info.arc, true) }, []),
+        h("div", { class: "swc-txt" }, [
+          h("strong", {}, [info.name]),
+          h("span", { class: "swc-sub" }, [info.sub || ""]),
+          h("small", {}, [info.desc]),
+        ]),
+      ]);
+    }));
   }
 
   // kleur-helpers

@@ -344,6 +344,33 @@ h3 { font-size: 16px; margin: 0 0 10px; }
 .approach-card small { color: var(--muted); font-size: 13px; }
 .quick-finish { margin-top: 16px; }
 
+/* ===== model-foto's ===== */
+.model-grid.photo { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.model-photo { width: 100%; }
+.model-photo svg { width: 100%; height: auto; border-radius: 8px; display: block; }
+
+/* ===== inbegrepen-box ===== */
+.incl-box { background: #f4f8f4; border: 1px solid #d3e6d6; border-radius: 12px; padding: 14px 16px; margin: 16px 0; }
+.incl-box.compact { padding: 10px 12px; margin: 0; }
+.incl-head { font-weight: 700; color: var(--teal-d); margin-bottom: 8px; }
+.incl-list { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 3px 16px; }
+.incl-box.compact .incl-list { grid-template-columns: 1fr; }
+.incl-list li { font-size: 13px; padding-left: 18px; position: relative; }
+.incl-list li::before { content: "✓"; position: absolute; left: 0; color: var(--lime); font-weight: 800; }
+.incl-note { margin-top: 10px; font-size: 12.5px; color: #8a6a1a; background: #fbf3e6; border-radius: 8px; padding: 8px 10px; }
+
+/* ===== draairichting-vergelijking (Loft / Loft Plus) ===== */
+.swing-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.swingc-card { display: flex; gap: 12px; align-items: center; text-align: left; background: #fff; border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px; cursor: pointer; font: inherit; transition: .14s; }
+.swingc-card:hover { border-color: #b9d0ce; }
+.swingc-card.sel { border-color: var(--teal); background: var(--sel-bg); }
+.swc-fig { width: 84px; flex: 0 0 auto; }
+.swing-svg { width: 84px; height: 64px; }
+.swc-txt strong { display: block; font-size: 14px; }
+.swc-sub { font-size: 11.5px; color: var(--teal); font-weight: 600; }
+.swc-txt small { display: block; color: var(--muted); font-size: 12px; margin-top: 3px; }
+@media (max-width: 620px) { .swing-compare { grid-template-columns: 1fr; } }
+
 /* ===== plan-herkenning ===== */
 .plan-recognize { margin-top: 14px; }
 .pr-busy { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--teal-d); }
