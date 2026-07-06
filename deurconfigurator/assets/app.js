@@ -1731,8 +1731,15 @@
     var fg = activeFinish();
     var kids = [h("h2", {}, ["Jouw samenstelling"])];
 
+    if (state._preview3d === undefined) state._preview3d = true;
     kids.push(h("div", { class: "result-grid" }, [
-      h("div", { class: "result-preview" }, [bigDoor(line, fg)]),
+      h("div", { class: "result-preview" }, [
+        h("div", { class: "prev-toggle" }, [
+          h("button", { class: "pt-btn" + (state._preview3d ? " on" : ""), onclick: function () { state._preview3d = true; render(); } }, ["3D"]),
+          h("button", { class: "pt-btn" + (!state._preview3d ? " on" : ""), onclick: function () { state._preview3d = false; render(); } }, ["Foto"]),
+        ]),
+        state._preview3d ? render3DDoor(line, fg) : bigDoor(line, fg),
+      ]),
       h("div", { class: "result-spec" }, [
         specRow("Productlijn", line.name),
         specRow("Afwerking", fg ? fg.finish.name : "—"),
@@ -1877,6 +1884,129 @@
   // grote deur-preview in een showroom-scène
   function bigDoor(line, fg) {
     return h("div", { class: "door-shell", html: bigDoorSVG(line, fg, false) });
+  }
+
+  /* ====================================================================== *
+   *  3D-RENDER van de samengestelde deur (CSS-3D, draaibaar, open/dicht)
+   *  Toont scharnieren (aantal ~ hoogte), krukzijde/-hoogte en draairichting.
+   * ====================================================================== */
+  var _d3 = { rot: -32, tilt: -10, open: 0 };
+  function hingeCountFor(h) { return h > 231.5 ? 5 : h > 211.5 ? 4 : 3; }
+
+  function render3DDoor(line, fg) {
+    var m = C.models[state.modelId] || C.models.vlak;
+    var realH = line.customHeight ? (state.customHeight || 250) : (state.height || 201.5);
+    var realW = state.width || 83;
+    var T = window.TEXTURES || {};
+    var isGlass = !!(m.glass && m.grid);
+    var tex = fg && fg.finish ? T[fg.finish.id] : null;
+    var base = fg && fg.finish ? (fg.finish.swatch.indexOf("gradient") >= 0 ? (fg.finish.swatch.match(/#[0-9a-fA-F]{3,6}/) || ["#ccc"])[0] : fg.finish.swatch) : "#e6e2da";
+    var edgeCol = isGlass ? "#1c1c1e" : shade(base, -26);
+
+    // afmetingen (px) — hoogte schaalt met de echte deurhoogte
+    var H = Math.round(300 * (realH / 231.5)); H = Math.max(220, Math.min(380, H));
+    var W = Math.round(H * (realW / realH)); W = Math.max(80, W);
+    var TH = 14;                          // deurdikte
+    var hingeLeft = state.hinge === "links";
+    var hingeX = hingeLeft ? -W / 2 : W / 2;
+    var duwend = state.swing === "duwend";
+    var openAngle = (hingeLeft ? 1 : -1) * (duwend ? -1 : 1) * 62;
+    var nHinges = hingeCountFor(realH);
+
+    function face(w, hh, tf, extra) {
+      return h("div", { class: "d3-face", style: "width:" + w + "px;height:" + hh + "px;transform:translate(-50%,-50%) " + tf + ";" + (extra || "") }, []);
+    }
+
+    // voorzijde-inhoud: foto-textuur of glasraster
+    var frontInner;
+    if (isGlass) {
+      var gc = m.grid[0], gr = m.grid[1], gsvg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:100%;height:100%">';
+      gsvg += '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="#1c1c1e"/>';
+      var pad = 7, iw = W - pad * 2, ih = H - pad * 2, cw = iw / gc, ch = ih / gr;
+      gsvg += '<rect x="' + pad + '" y="' + pad + '" width="' + iw + '" height="' + ih + '" fill="#d9e6ea" opacity="0.7"/>';
+      for (var c = 1; c < gc; c++) gsvg += '<rect x="' + (pad + c * cw - 2) + '" y="' + pad + '" width="4" height="' + ih + '" fill="#1c1c1e"/>';
+      for (var r = 1; r < gr; r++) gsvg += '<rect x="' + pad + '" y="' + (pad + r * ch - 2) + '" width="' + iw + '" height="4" fill="#1c1c1e"/>';
+      gsvg += "</svg>";
+      frontInner = h("div", { class: "d3-front-inner", html: gsvg }, []);
+    } else {
+      frontInner = h("div", { class: "d3-front-inner", style: tex ? "background-image:url(" + tex + ");background-size:cover;background-position:center" : "background:" + base }, []);
+    }
+
+    // scharnieren op de scharnierzijde-rand
+    var hingeEls = [];
+    for (var i = 0; i < nHinges; i++) {
+      var frac = (i + 0.5) / nHinges; // gelijkmatig verdeeld
+      var top = Math.round(6 + frac * (H - 12));
+      hingeEls.push(h("div", { class: "d3-hinge", style: "top:" + top + "px;left:50%;transform:translateX(-50%)" }, []));
+    }
+    var hingeEdge = h("div", {
+      class: "d3-edge d3-hinge-edge", style: "width:" + TH + "px;height:" + H + "px;background:" + edgeCol +
+        ";transform:translate(-50%,-50%) translateX(" + hingeX + "px) rotateY(" + (hingeLeft ? -90 : 90) + "deg)",
+    }, hingeEls);
+
+    // kruk/greep op de tegenoverliggende zijde, op klinkhoogte
+    var isGreep = line.handleType === "greep";
+    var klink = 105; // cm vanaf de vloer
+    var handleFrac = Math.max(0.28, Math.min(0.6, klink / realH));
+    var handleTop = Math.round((1 - handleFrac) * H);
+    var handleX = hingeLeft ? W - 16 : 8;
+    var handleColor = state.lockColor === "zwart" ? "#1b1b1d" : "#b7b1a7";
+    var handle = state.handleId === "geen" ? null : h("div", {
+      class: "d3-handle" + (isGreep ? " greep" : ""),
+      style: "top:" + handleTop + "px;left:" + handleX + "px;background:" + handleColor,
+    }, []);
+
+    // deurblad (leaf) met alle vlakken
+    var leaf = h("div", {
+      class: "d3-leaf",
+      style: "width:" + W + "px;height:" + H + "px;transform-origin:" + (hingeLeft ? "left" : "right") + " center;transform:rotateY(" + _d3.open + "deg)",
+    }, [
+      h("div", { class: "d3-face d3-front", style: "width:" + W + "px;height:" + H + "px;transform:translate(-50%,-50%) translateZ(" + (TH / 2) + "px)" }, [frontInner, handle]),
+      h("div", { class: "d3-face", style: "width:" + W + "px;height:" + H + "px;background:" + shade(base, -6) + ";transform:translate(-50%,-50%) translateZ(-" + (TH / 2) + "px) rotateY(180deg)" }, []),
+      hingeEdge,
+      face(TH, H, "translateX(" + (-hingeX) + "px) rotateY(" + (hingeLeft ? 90 : -90) + "deg)", "background:" + edgeCol), // slotzijde
+      face(W, TH, "translateY(-" + (H / 2) + "px) rotateX(90deg)", "background:" + shade(base, -14)),  // boven
+      face(W, TH, "translateY(" + (H / 2) + "px) rotateX(-90deg)", "background:" + shade(base, -18)),   // onder
+    ]);
+
+    // eenvoudige kast/omlijsting achter de deur (dagkant)
+    var jamb = h("div", { class: "d3-jamb", style: "width:" + (W + 20) + "px;height:" + (H + 16) + "px;transform:translate(-50%,-50%) translateZ(-" + (TH / 2 + 10) + "px)" }, []);
+
+    var stage = h("div", { class: "d3-stage", style: "transform:rotateX(" + _d3.tilt + "deg) rotateY(" + _d3.rot + "deg)" }, [jamb, leaf]);
+    var leafRef = leaf, stageRef = stage;
+
+    var scene = h("div", { class: "d3-scene" }, [stage]);
+    // sleep om te draaien
+    var dragging = false, lx = 0, ly = 0;
+    scene.addEventListener("pointerdown", function (e) { dragging = true; lx = e.clientX; ly = e.clientY; scene.setPointerCapture(e.pointerId); });
+    scene.addEventListener("pointermove", function (e) {
+      if (!dragging) return;
+      _d3.rot += (e.clientX - lx) * 0.5; _d3.tilt = Math.max(-30, Math.min(20, _d3.tilt - (e.clientY - ly) * 0.3));
+      lx = e.clientX; ly = e.clientY;
+      stageRef.style.transform = "rotateX(" + _d3.tilt + "deg) rotateY(" + _d3.rot + "deg)";
+    });
+    scene.addEventListener("pointerup", function () { dragging = false; });
+    scene.addEventListener("pointerleave", function () { dragging = false; });
+
+    function applyOpen() { leafRef.style.transform = "rotateY(" + _d3.open + "deg)"; }
+    function applyStage() { stageRef.style.transform = "rotateX(" + _d3.tilt + "deg) rotateY(" + _d3.rot + "deg)"; }
+
+    return h("div", { class: "d3-wrap" }, [
+      scene,
+      h("div", { class: "d3-controls" }, [
+        h("button", { class: "d3-btn", onclick: function () { _d3.open = _d3.open ? 0 : openAngle; applyOpen(); } }, ["🚪 Open / dicht"]),
+        h("button", { class: "d3-btn", onclick: function () { _d3.rot -= 25; applyStage(); } }, ["⟲"]),
+        h("button", { class: "d3-btn", onclick: function () { _d3.rot += 25; applyStage(); } }, ["⟳"]),
+        h("button", { class: "d3-btn", onclick: function () { _d3.rot = -32; _d3.tilt = -10; _d3.open = 0; applyStage(); applyOpen(); } }, ["↺ reset"]),
+      ]),
+      h("div", { class: "d3-legend" }, [
+        h("span", {}, ["🔩 " + nHinges + " verdoken scharnieren"]),
+        h("span", {}, ["📏 " + realH + " cm hoog"]),
+        h("span", {}, ["🖐 kruk " + (hingeLeft ? "rechts" : "links")]),
+        line.swings ? h("span", {}, ["↪ " + (duwend ? "naar buiten" : "naar binnen")]) : null,
+      ]),
+      h("div", { class: "d3-hint" }, ["Sleep om te draaien · klik 'Open / dicht' om de scharnieren te zien"]),
+    ]);
   }
 
   // genereert een realistische deur in een kamerscène

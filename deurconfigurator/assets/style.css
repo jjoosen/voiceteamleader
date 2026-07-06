@@ -671,6 +671,37 @@ h3 { font-size: 16px; margin: 0 0 10px; }
   .ci-right { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; }
 }
 
+/* ===== 3D-deur render ===== */
+.prev-toggle { display: flex; gap: 4px; background: var(--bg-2); padding: 4px; border-radius: 999px; width: max-content; margin: 0 auto 10px; }
+.pt-btn { font: inherit; font-size: 12.5px; font-weight: 700; border: none; background: transparent; color: var(--muted); padding: 6px 16px; border-radius: 999px; cursor: pointer; }
+.pt-btn.on { background: var(--teal); color: #fff; }
+.d3-wrap { }
+.d3-scene {
+  perspective: 1300px; height: 400px; display: grid; place-items: center;
+  background: radial-gradient(120% 90% at 50% 20%, #f7f4ee, #e6e0d4);
+  border-radius: 16px; overflow: hidden; touch-action: none; cursor: grab; user-select: none;
+  border: 1px solid var(--line);
+}
+.d3-scene:active { cursor: grabbing; }
+.d3-stage { position: relative; transform-style: preserve-3d; width: 0; height: 0; }
+.d3-leaf { position: absolute; left: 0; top: 0; transform-style: preserve-3d; transition: transform .55s cubic-bezier(.4,.1,.2,1); }
+.d3-face { position: absolute; left: 0; top: 0; overflow: hidden; }
+.d3-front-inner { position: absolute; inset: 0; box-shadow: inset 0 0 40px rgba(0,0,0,.06); }
+.d3-front { box-shadow: 0 30px 40px rgba(0,0,0,.18); }
+.d3-hinge { position: absolute; width: 11px; height: 22px; border-radius: 2px;
+  background: linear-gradient(180deg,#e2ddd3,#a7a094); box-shadow: inset 0 0 0 1px rgba(0,0,0,.18), 0 1px 1px rgba(0,0,0,.2); }
+.d3-hinge::after { content: ""; position: absolute; inset: 8px 4px; border-radius: 1px; background: rgba(0,0,0,.12); }
+.d3-handle { position: absolute; width: 28px; height: 7px; border-radius: 4px; transform: translateZ(8px);
+  box-shadow: 0 2px 4px rgba(0,0,0,.35); }
+.d3-handle.greep { width: 7px; height: 78px; }
+.d3-jamb { position: absolute; background: linear-gradient(120deg,#efeade,#ded7c8); border-radius: 2px; box-shadow: 0 20px 40px rgba(0,0,0,.1); }
+.d3-controls { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.d3-btn { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line-2); background: #fff; color: var(--ink); padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.d3-btn:hover { border-color: var(--teal); color: var(--teal); }
+.d3-legend { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 12px; }
+.d3-legend span { font-size: 12.5px; font-weight: 600; background: var(--sel-bg); color: var(--teal-d); padding: 6px 11px; border-radius: 999px; }
+.d3-hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
 /* ===== mobiele verfijning ===== */
 @media (max-width: 680px) {
   .site-header { padding: 11px 14px; }
