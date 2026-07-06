@@ -291,8 +291,16 @@
    *  RENDERING
    * ====================================================================== */
   var app = $("#app");
+  var lastScrollSig = null;
 
   function render() {
+    // behoud scrollpositie bij een keuze binnen hetzelfde scherm;
+    // scroll enkel naar boven bij een echte schermwissel
+    var prevScroll = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var sig = [state.view, state.step, state.bouw.walk ? "w" + state.bouw.idx : "", state.bouw.quick ? "q" : ""].join(":");
+    var screenChanged = sig !== lastScrollSig;
+    lastScrollSig = sig;
+
     app.innerHTML = "";
     var stepperEl = $("#stepper");
 
@@ -338,7 +346,8 @@
     renderNav();
     renderModeSwitch();
     updateSummary();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (screenChanged) window.scrollTo({ top: 0, behavior: "smooth" });
+    else window.scrollTo(0, prevScroll); // blijf staan waar je was
   }
 
   // hoofdnavigatie (Configureren / Keuzehulp / Winkelmandje) onder de header
